@@ -1,0 +1,30 @@
+# Local media assets — not yet decided whether these belong in the repo.
+# Large binaries bloat git history permanently; prefer a CDN or Git LFS if they
+# do need to ship. Remove these lines once that's settled.
+landovgold/
+logo.zip
+*.zip
+
+# Scratch
+New Text Document*.txt
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+.next/
+out/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Editor and OS cruft
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+*~
