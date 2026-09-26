@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   title: { default: `${SITE.name} | طيران ورحلات أسوان والنوبة`, template: `%s | ${SITE.name}` },
   description: `${SITE.tagline}. ابعت طلبك ونرجعلك بأكتر من سعر تختار منهم.`,
   openGraph: { siteName: SITE.name, locale: "ar_EG", type: "website" },
+  // Pre-launch noindex; the switch is ALLOW_INDEXING in next.config.mjs.
+  robots: process.env.ALLOW_INDEXING === "true" ? undefined : { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

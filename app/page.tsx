@@ -1,14 +1,9 @@
 import Link from "next/link";
 import NubianStrip from "@/components/NubianStrip";
+import OfferCard from "@/components/OfferCard";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { availableOffers } from "@/lib/offers";
 import { SITE, whatsappLink } from "@/lib/site";
-
-// Placeholder offers until the admin panel and database exist.
-const SAMPLE_OFFERS = [
-  { from: "القاهرة", to: "الرياض" },
-  { from: "القاهرة", to: "دبي" },
-  { from: "القاهرة", to: "أسوان" },
-];
 
 const STEPS = [
   { title: "تبعت طلبك", text: "على واتساب أو من الفورم: الوجهة والتاريخ وعدد المسافرين." },
@@ -17,6 +12,8 @@ const STEPS = [
 ];
 
 export default function HomePage() {
+  const latestOffers = availableOffers().slice(0, 3);
+
   return (
     <>
       <section className="hero">
@@ -58,29 +55,17 @@ export default function HomePage() {
 
       <section className="section container">
         <h2 className="section-title">أحدث العروض</h2>
-        <p className="section-sub">محتوى مؤقت — العروض الحقيقية هتنزل هنا أول بأول.</p>
-        <div className="grid-3">
-          {SAMPLE_OFFERS.map((o) => {
-            const name = `${o.from} ← ${o.to}`;
-            return (
-              <article key={name} className="card offer-card">
-                <span className="badge">مثال</span>
-                <h3>{name}</h3>
-                <dl>
-                  <div><dt>السعر</dt><dd>يُعلن قريباً</dd></div>
-                  <div><dt>التاريخ</dt><dd>يُعلن قريباً</dd></div>
-                </dl>
-                <a
-                  className="btn btn-wa btn-block"
-                  href={whatsappLink(`أهلاً بلاد الدهب، عايز أستفسر عن عرض ${o.from} إلى ${o.to}`)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <WhatsAppIcon size={18} /> اسأل عن العرض
-                </a>
-              </article>
-            );
-          })}
+        {latestOffers.length > 0 ? (
+          <div className="grid-3">
+            {latestOffers.map((o) => (
+              <OfferCard key={o.slug} offer={o} />
+            ))}
+          </div>
+        ) : (
+          <p className="section-sub">مفيش عروض متاحة دلوقتي، كلّمنا ونجيبلك أحسن سعر.</p>
+        )}
+        <div className="center more-link">
+          <Link className="btn btn-outline" href="/offers">كل العروض</Link>
         </div>
       </section>
 

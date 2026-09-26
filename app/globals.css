@@ -482,6 +482,254 @@ img {
   color: #fff;
 }
 
+/* ---------- Page head ---------- */
+.page-head {
+  background: var(--navy);
+  color: #fff;
+  padding-block: 48px 40px;
+}
+
+.page-head h1 {
+  color: var(--gold);
+  font-size: clamp(30px, 5vw, 44px);
+}
+
+.page-head p {
+  margin: 0;
+  max-width: 60ch;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.back-link:hover {
+  color: var(--gold);
+}
+
+.section-sand {
+  background: var(--sand-deep);
+}
+
+.narrow {
+  max-width: 560px;
+}
+
+.more-link {
+  margin-top: 32px;
+}
+
+.small {
+  font-size: 15px;
+}
+
+/* ---------- Offer pages ---------- */
+.badge-expired {
+  background: #eee;
+  color: #777;
+}
+
+.offer-card.is-expired {
+  opacity: 0.6;
+}
+
+.badge-inline {
+  position: static;
+  display: inline-block;
+  background: var(--gold);
+  color: var(--navy-deep);
+}
+
+.offer-layout {
+  display: grid;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .offer-layout {
+    grid-template-columns: 1fr 400px;
+  }
+}
+
+.offer-facts {
+  margin: 0 0 24px;
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.offer-facts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--sand-deep);
+}
+
+.offer-facts div:last-child {
+  border-bottom: 0;
+}
+
+.offer-facts dt {
+  color: var(--muted);
+}
+
+.offer-facts dd {
+  margin: 0;
+  font-weight: 700;
+  color: var(--navy);
+  text-align: end;
+}
+
+.offer-facts .price {
+  color: var(--gold-dark);
+  font-size: 24px;
+}
+
+.offer-details {
+  margin: 0 0 24px;
+  padding-inline-start: 20px;
+}
+
+.offer-details li::marker {
+  color: var(--gold-dark);
+}
+
+.notice {
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #fdecea;
+  color: #8a2a1e;
+  font-weight: 600;
+}
+
+.offer-cta {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 900px) {
+  .offer-cta {
+    position: sticky;
+    top: 100px;
+  }
+}
+
+.btn-lg {
+  padding: 14px 28px;
+  font-size: 19px;
+}
+
+.contact-list {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+}
+
+.contact-list a {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+/* ---------- Lead form ---------- */
+.lead-form {
+  display: grid;
+  gap: 14px;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid var(--sand-deep);
+  border-top: 4px solid var(--gold);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.lead-form h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.lead-form label {
+  display: grid;
+  gap: 4px;
+  font-weight: 600;
+  color: var(--navy);
+  font-size: 15px;
+}
+
+.lead-form input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d9cfbb;
+  border-radius: 10px;
+  background: var(--sand);
+  font: inherit;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.lead-form input:focus {
+  outline: 2px solid var(--gold);
+  border-color: var(--gold);
+}
+
+.lead-form input[dir="ltr"] {
+  text-align: right;
+}
+
+/* Visually hidden without shifting it offscreen (offscreen left scrolls in RTL). */
+.lead-form .hp {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  opacity: 0;
+}
+
+.lead-form {
+  position: relative;
+}
+
+.lead-form button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.form-error {
+  margin: 0;
+  color: #b3261e;
+  font-weight: 600;
+}
+
+.lead-done {
+  text-align: center;
+}
+
+.lead-check {
+  display: inline-grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-inline: auto;
+  border-radius: 50%;
+  background: var(--wa);
+  color: #fff;
+  font-size: 28px;
+}
+
+.lead-done p {
+  margin: 0;
+}
+
 /* ---------- Footer ---------- */
 .site-footer {
   background: var(--navy-deep);
