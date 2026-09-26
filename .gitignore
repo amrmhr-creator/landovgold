@@ -2,6 +2,7 @@
 # Large binaries bloat git history permanently; prefer a CDN or Git LFS if they
 # do need to ship. Remove these lines once that's settled.
 landovgold/
+originals/
 logo.zip
 *.zip
 
@@ -23,6 +24,7 @@ out/
 !.env.example
 
 # Editor and OS cruft
+.claude/launch.json
 .vscode/
 .idea/
 Thumbs.db
