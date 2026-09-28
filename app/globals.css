@@ -683,6 +683,73 @@ img {
   text-align: right;
 }
 
+.lead-form input[type="date"] {
+  min-height: 48px;
+  cursor: pointer;
+}
+
+.lead-row {
+  display: grid;
+  gap: 14px;
+}
+
+@media (min-width: 520px) {
+  .lead-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ---------- Airport picker ---------- */
+.airport {
+  position: relative;
+}
+
+.airport-list {
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  z-index: 20;
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 4px 0 0;
+  padding: 4px;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #d9cfbb;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+.airport-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.airport-list li[aria-selected="true"] {
+  background: var(--sand-deep);
+}
+
+.airport-list small {
+  display: block;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.airport-list b {
+  color: var(--gold-dark);
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
 /* Visually hidden without shifting it offscreen (offscreen left scrolls in RTL). */
 .lead-form .hp {
   position: absolute;

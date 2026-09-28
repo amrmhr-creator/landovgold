@@ -77,7 +77,7 @@ export default async function OfferPage({ params }: Params) {
           <a className="btn btn-wa btn-block btn-lg" href={whatsappLink(waMessage)} target="_blank" rel="noopener noreferrer">
             <WhatsAppIcon size={22} /> احجز على واتساب
           </a>
-          <LeadForm offer={offer.slug} />
+          <LeadForm offer={offer.slug} offerLabel={`${title} يوم ${formatDate(offer.date)}`} />
         </aside>
       </section>
     </>

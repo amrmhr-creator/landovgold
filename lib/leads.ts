@@ -1,12 +1,14 @@
 import "server-only";
 import mysql from "mysql2/promise";
 import nodemailer from "nodemailer";
+import { formatDate } from "./offers";
 import { SITE } from "./site";
 
 export type Lead = {
   name: string;
   phone: string;
   destination: string;
+  travelDate: string | null; // YYYY-MM-DD
   offerSlug: string | null;
   page: string | null;
 };
@@ -82,18 +84,24 @@ async function saveLead(lead: Lead) {
           name VARCHAR(120) NOT NULL,
           phone VARCHAR(40) NOT NULL,
           destination VARCHAR(200) NOT NULL,
+          travel_date DATE NULL,
           offer_slug VARCHAR(120) NULL,
           page VARCHAR(200) NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
       `),
     );
+    // Tables created before travel_date existed.
+    const [cols] = await withRetry(() => db.query("SHOW COLUMNS FROM leads LIKE 'travel_date'"));
+    if ((cols as unknown[]).length === 0) {
+      await withRetry(() => db.query("ALTER TABLE leads ADD COLUMN travel_date DATE NULL AFTER destination"));
+    }
     tableReady = true;
   }
   await withRetry(() =>
     db.execute(
-      "INSERT INTO leads (name, phone, destination, offer_slug, page) VALUES (?, ?, ?, ?, ?)",
-      [lead.name, lead.phone, lead.destination, lead.offerSlug, lead.page],
+      "INSERT INTO leads (name, phone, destination, travel_date, offer_slug, page) VALUES (?, ?, ?, ?, ?, ?)",
+      [lead.name, lead.phone, lead.destination, lead.travelDate, lead.offerSlug, lead.page],
     ),
   );
   return true;
@@ -127,6 +135,7 @@ async function emailLead(lead: Lead) {
     ["الاسم", lead.name],
     ["الرقم", lead.phone],
     ["الوجهة / العرض", lead.destination],
+    ["تاريخ السفر", lead.travelDate ? formatDate(lead.travelDate) : "-"],
     ["الصفحة", lead.page ?? "-"],
   ];
   await transport.sendMail({

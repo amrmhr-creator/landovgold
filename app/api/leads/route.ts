@@ -24,6 +24,16 @@ function clientIp(req: Request) {
 
 const clean = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
+/** YYYY-MM-DD from today (a day of slack for time zones) up to two years out, else null. */
+function validTravelDate(v: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
+  const t = Date.parse(`${v}T00:00:00Z`);
+  if (Number.isNaN(t) || new Date(t).toISOString().slice(0, 10) !== v) return null;
+  const day = 86_400_000;
+  if (t < Date.now() - 2 * day || t > Date.now() + 730 * day) return null;
+  return v;
+}
+
 export async function POST(req: Request) {
   let body: Record<string, unknown>;
   try {
@@ -39,11 +49,25 @@ export async function POST(req: Request) {
   // Accept Arabic-Indic digits (٠-٩) too.
   const phone = clean(body.phone, 40).replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
   const offer = getOffer(clean(body.offer, 120));
-  const destination = offer ? offerTitle(offer) : clean(body.destination, 200);
 
   const digits = phone.replace(/[^\d]/g, "");
-  if (name.length < 2 || digits.length < 8 || digits.length > 15 || !destination) {
-    return NextResponse.json({ error: "اكتب اسمك ورقم صحيح والوجهة." }, { status: 400 });
+  if (name.length < 2 || digits.length < 8 || digits.length > 15) {
+    return NextResponse.json({ error: "اكتب اسمك ورقم موبايل صحيح." }, { status: 400 });
+  }
+
+  let destination: string;
+  let travelDate: string | null;
+  if (offer) {
+    destination = offerTitle(offer);
+    travelDate = offer.date;
+  } else {
+    const from = clean(body.from, 100);
+    const to = clean(body.to, 100);
+    if (!from || !to) return NextResponse.json({ error: "اختار مسافر منين ورايح فين." }, { status: 400 });
+    if (from === to) return NextResponse.json({ error: "مطار السفر ومطار الوصول لازم يكونوا مختلفين." }, { status: 400 });
+    travelDate = validTravelDate(clean(body.date, 10));
+    if (!travelDate) return NextResponse.json({ error: "اختار تاريخ سفر صحيح." }, { status: 400 });
+    destination = `${from} ← ${to}`;
   }
 
   const ip = clientIp(req);
@@ -57,6 +81,7 @@ export async function POST(req: Request) {
     name,
     phone,
     destination,
+    travelDate,
     offerSlug: offer?.slug ?? null,
     page: clean(body.page, 200) || null,
   });
