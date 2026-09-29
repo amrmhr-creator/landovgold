@@ -5,15 +5,29 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import AirportInput from "@/components/AirportInput";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { SERVICES, TRANSPORT } from "@/lib/lead-options";
 import { formatDate } from "@/lib/offers";
 import { whatsappLink } from "@/lib/site";
+import { TRIPS } from "@/lib/trips";
+
+/**
+ * offer:   a flight offer page; route and date come from the offer.
+ * flight:  "مش لاقي وجهتك؟" — from, to, date, travelers.
+ * trip:    Aswan & Nubia booking — program, transport, date, travelers.
+ * contact: contact page — service and free-text details.
+ */
+export type LeadKind = "offer" | "flight" | "trip" | "contact";
 
 type Props = {
-  /** Offer slug: route and date come from the offer, so those fields are hidden. */
+  kind: LeadKind;
+  /** Offer slug (kind "offer"). */
   offer?: string;
-  /** Offer name for the WhatsApp message after sending, e.g. "القاهرة ← دبي". */
+  /** Offer name for the WhatsApp message after sending, e.g. "القاهرة إلى دبي يوم …". */
   offerLabel?: string;
+  /** Preselected program (kind "trip"). */
+  trip?: string;
   title?: string;
+  submitLabel?: string;
 };
 
 function localToday() {
@@ -21,7 +35,23 @@ function localToday() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export default function LeadForm({ offer, offerLabel, title = "أو سيب بياناتك ونكلّمك" }: Props) {
+/** What the visitor asked for, in words, for the WhatsApp follow-up message. */
+function describeRequest(kind: LeadKind, data: Record<string, string>, offerLabel?: string) {
+  switch (kind) {
+    case "offer":
+      return `عرض ${offerLabel ?? ""}`;
+    case "flight":
+      return `${data.from} ← ${data.to} يوم ${formatDate(data.date)}، ${data.travelers} فرد`;
+    case "trip": {
+      const trip = TRIPS.find((t) => t.slug === data.trip);
+      return `${trip?.title ?? "رحلة أسوان"} يوم ${formatDate(data.date)}، ${data.travelers} فرد`;
+    }
+    case "contact":
+      return data.service;
+  }
+}
+
+export default function LeadForm({ kind, offer, offerLabel, trip, title, submitLabel = "ابعت الطلب" }: Props) {
   const pathname = usePathname();
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [error, setError] = useState("");
@@ -39,12 +69,11 @@ export default function LeadForm({ offer, offerLabel, title = "أو سيب بي�
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, offer, page: pathname }),
+        body: JSON.stringify({ ...data, kind, offer, page: pathname }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || "حصلت مشكلة، جرّب تاني.");
-      const request = offer ? `عرض ${offerLabel ?? ""}` : `${data.from} ← ${data.to} يوم ${formatDate(data.date)}`;
-      setWaMessage(`أهلاً بلاد الدهب، أنا ${data.name}، لسه باعت طلب على الموقع: ${request}`);
+      setWaMessage(`أهلاً بلاد الدهب، أنا ${data.name}، لسه باعت طلب على الموقع: ${describeRequest(kind, data, offerLabel)}`);
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "حصلت مشكلة، جرّب تاني.");
@@ -68,40 +97,105 @@ export default function LeadForm({ offer, offerLabel, title = "أو سيب بي�
     );
   }
 
+  const dateInput = (label: string) => (
+    <label>
+      {label}
+      <input
+        name="date"
+        type="date"
+        required
+        min={minDate}
+        // Open the calendar on any click, not just on the small icon.
+        onClick={(e) => {
+          try {
+            e.currentTarget.showPicker();
+          } catch {}
+        }}
+      />
+    </label>
+  );
+
+  const travelersInput = (
+    <label>
+      عدد المسافرين
+      <input name="travelers" type="number" required min={1} max={50} defaultValue={1} inputMode="numeric" />
+    </label>
+  );
+
   return (
-    <form className="lead-form" onSubmit={onSubmit} noValidate={false}>
-      <h3>{title}</h3>
+    <form className="lead-form" onSubmit={onSubmit}>
+      {title && <h3>{title}</h3>}
       <label>
         الاسم
         <input name="name" required minLength={2} maxLength={120} autoComplete="name" />
       </label>
       <label>
-        رقم الموبايل (واتساب لو أمكن)
+        رقم الموبايل أو الواتساب
         <input name="phone" type="tel" required inputMode="tel" dir="ltr" maxLength={40} autoComplete="tel" placeholder="01xxxxxxxxx" />
       </label>
-      {!offer && (
+
+      {kind === "flight" && (
         <>
           <div className="lead-row">
-            <AirportInput name="from" label="من" placeholder="اكتب المدينة أو المطار" />
-            <AirportInput name="to" label="إلى" placeholder="اكتب المدينة أو المطار" />
+            <AirportInput name="from" label="مسافر منين؟" placeholder="اكتب المدينة أو المطار" />
+            <AirportInput name="to" label="رايح فين؟" placeholder="اكتب المدينة أو المطار" />
           </div>
+          <div className="lead-row">
+            {dateInput("تاريخ السفر التقريبي")}
+            {travelersInput}
+          </div>
+        </>
+      )}
+
+      {kind === "trip" && (
+        <>
           <label>
-            تاريخ السفر
-            <input
-              name="date"
-              type="date"
-              required
-              min={minDate}
-              // Open the calendar on any click, not just on the small icon.
-              onClick={(e) => {
-                try {
-                  e.currentTarget.showPicker();
-                } catch {}
-              }}
-            />
+            البرنامج
+            <select name="trip" required defaultValue={trip ?? TRIPS[0].slug}>
+              {TRIPS.map((t) => (
+                <option key={t.slug} value={t.slug}>
+                  {t.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            هتسافر أسوان إزاي؟
+            <select name="transport" required defaultValue={TRANSPORT[0]}>
+              {TRANSPORT.map((t) => (
+                <option key={t}>{t}</option>
+              ))}
+            </select>
+          </label>
+          <div className="lead-row">
+            {dateInput("تاريخ السفر التقريبي")}
+            {travelersInput}
+          </div>
+        </>
+      )}
+
+      {kind === "contact" && (
+        <>
+          <label>
+            الخدمة
+            <select name="service" required defaultValue={SERVICES[0]}>
+              {SERVICES.map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            تفاصيل طلبك
+            <textarea name="details" required minLength={3} maxLength={1000} rows={4} />
           </label>
         </>
       )}
+
+      <label className="check">
+        <input type="checkbox" name="marketing" value="yes" />
+        ابعتولي عروض جديدة على واتساب
+      </label>
+
       {/* Honeypot: hidden from people, bots fill it. */}
       <input name="website" tabIndex={-1} autoComplete="off" className="hp" aria-hidden="true" />
       {status === "error" && (
@@ -110,7 +204,7 @@ export default function LeadForm({ offer, offerLabel, title = "أو سيب بي�
         </p>
       )}
       <button className="btn btn-gold btn-block" type="submit" disabled={status === "sending"}>
-        {status === "sending" ? "بيتبعت..." : "ابعت طلبك"}
+        {status === "sending" ? "بيتبعت..." : submitLabel}
       </button>
     </form>
   );

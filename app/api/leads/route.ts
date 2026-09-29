@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { SERVICES, TRANSPORT } from "@/lib/lead-options";
+import { submitLead, type Lead } from "@/lib/leads";
 import { getOffer, offerTitle } from "@/lib/offers";
-import { submitLead } from "@/lib/leads";
+import { getTrip } from "@/lib/trips";
 
 // Spam brake: 10 stored leads per IP per 10 minutes. Only successes count, so a visitor
 // retrying after one of our failures isn't locked out.
@@ -24,6 +26,9 @@ function clientIp(req: Request) {
 
 const clean = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
+/** Western digits for Arabic-Indic ones (٠-٩). */
+const westernDigits = (s: string) => s.replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
+
 /** YYYY-MM-DD from today (a day of slack for time zones) up to two years out, else null. */
 function validTravelDate(v: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
@@ -32,6 +37,59 @@ function validTravelDate(v: string) {
   const day = 86_400_000;
   if (t < Date.now() - 2 * day || t > Date.now() + 730 * day) return null;
   return v;
+}
+
+/** Whole number of travelers from 1 to 50, else null. */
+function validTravelers(v: unknown) {
+  const n = Number(westernDigits(clean(v, 5)));
+  return Number.isInteger(n) && n >= 1 && n <= 50 ? n : null;
+}
+
+const oneOf = <T extends string>(options: readonly T[], v: string): T | null =>
+  (options as readonly string[]).includes(v) ? (v as T) : null;
+
+class InvalidLead extends Error {}
+
+/** The request part of the lead, per form kind. Throws InvalidLead with the message to show. */
+function parseRequest(body: Record<string, unknown>): Omit<Lead, "name" | "phone" | "marketingOk" | "page"> {
+  const kind = clean(body.kind, 20);
+  const needDate = () => {
+    const date = validTravelDate(clean(body.date, 10));
+    if (!date) throw new InvalidLead("اختار تاريخ سفر صحيح.");
+    return date;
+  };
+  const needTravelers = () => {
+    const n = validTravelers(body.travelers);
+    if (!n) throw new InvalidLead("اكتب عدد المسافرين من 1 لـ 50.");
+    return n;
+  };
+
+  if (kind === "offer") {
+    const offer = getOffer(clean(body.offer, 120));
+    if (!offer) throw new InvalidLead("العرض ده مش موجود.");
+    return { kind, destination: offerTitle(offer), travelDate: offer.date, travelers: null, details: null, offerSlug: offer.slug };
+  }
+  if (kind === "flight") {
+    const from = clean(body.from, 100);
+    const to = clean(body.to, 100);
+    if (!from || !to) throw new InvalidLead("اختار مسافر منين ورايح فين.");
+    if (from === to) throw new InvalidLead("مطار السفر ومطار الوصول لازم يكونوا مختلفين.");
+    return { kind, destination: `${from} ← ${to}`, travelDate: needDate(), travelers: needTravelers(), details: null, offerSlug: null };
+  }
+  if (kind === "trip") {
+    const trip = getTrip(clean(body.trip, 120));
+    const transport = oneOf(TRANSPORT, clean(body.transport, 20));
+    if (!trip || !transport) throw new InvalidLead("اختار البرنامج وطريقة السفر.");
+    return { kind, destination: `${trip.title} (${transport})`, travelDate: needDate(), travelers: needTravelers(), details: null, offerSlug: trip.slug };
+  }
+  if (kind === "contact") {
+    const service = oneOf(SERVICES, clean(body.service, 40));
+    const details = clean(body.details, 1000);
+    if (!service) throw new InvalidLead("اختار الخدمة.");
+    if (details.length < 3) throw new InvalidLead("اكتب تفاصيل طلبك.");
+    return { kind, destination: service, travelDate: null, travelers: null, details, offerSlug: null };
+  }
+  throw new InvalidLead("طلب غير صالح");
 }
 
 export async function POST(req: Request) {
@@ -46,28 +104,18 @@ export async function POST(req: Request) {
   if (clean(body.website, 200)) return NextResponse.json({ ok: true });
 
   const name = clean(body.name, 120);
-  // Accept Arabic-Indic digits (٠-٩) too.
-  const phone = clean(body.phone, 40).replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
-  const offer = getOffer(clean(body.offer, 120));
-
+  const phone = westernDigits(clean(body.phone, 40));
   const digits = phone.replace(/[^\d]/g, "");
   if (name.length < 2 || digits.length < 8 || digits.length > 15) {
     return NextResponse.json({ error: "اكتب اسمك ورقم موبايل صحيح." }, { status: 400 });
   }
 
-  let destination: string;
-  let travelDate: string | null;
-  if (offer) {
-    destination = offerTitle(offer);
-    travelDate = offer.date;
-  } else {
-    const from = clean(body.from, 100);
-    const to = clean(body.to, 100);
-    if (!from || !to) return NextResponse.json({ error: "اختار مسافر منين ورايح فين." }, { status: 400 });
-    if (from === to) return NextResponse.json({ error: "مطار السفر ومطار الوصول لازم يكونوا مختلفين." }, { status: 400 });
-    travelDate = validTravelDate(clean(body.date, 10));
-    if (!travelDate) return NextResponse.json({ error: "اختار تاريخ سفر صحيح." }, { status: 400 });
-    destination = `${from} ← ${to}`;
+  let request;
+  try {
+    request = parseRequest(body);
+  } catch (err) {
+    if (err instanceof InvalidLead) return NextResponse.json({ error: err.message }, { status: 400 });
+    throw err;
   }
 
   const ip = clientIp(req);
@@ -77,14 +125,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "طلبات كتير في وقت قصير، جرّب بعد شوية أو كلّمنا على واتساب." }, { status: 429 });
   }
 
-  const ok = await submitLead({
+  const lead: Lead = {
     name,
     phone,
-    destination,
-    travelDate,
-    offerSlug: offer?.slug ?? null,
+    ...request,
+    marketingOk: body.marketing === "yes",
     page: clean(body.page, 200) || null,
-  });
+  };
+  const ok = await submitLead(lead);
 
   if (!ok) {
     return NextResponse.json({ error: "حصلت مشكلة وطلبك ما وصلش. كلّمنا على واتساب لو سمحت." }, { status: 500 });

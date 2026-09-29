@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { LEGAL, NAV, SITE, whatsappLink } from "@/lib/site";
+import { LEGAL, NAV, SITE, SOCIAL, whatsappLink } from "@/lib/site";
 import NubianStrip from "./NubianStrip";
 
 export default function Footer() {
@@ -50,6 +50,11 @@ export default function Footer() {
                 {SITE.email}
               </a>
             </li>
+            {SOCIAL.map((s) => (
+              <li key={s.href}>
+                <a href={s.href} target="_blank" rel="noopener noreferrer">{s.label}</a>
+              </li>
+            ))}
           </ul>
         </div>
       </div>

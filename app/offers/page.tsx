@@ -1,11 +1,12 @@
 import LeadForm from "@/components/LeadForm";
-import NubianStrip from "@/components/NubianStrip";
 import OfferCard from "@/components/OfferCard";
+import PageHead from "@/components/PageHead";
 import { availableOffers } from "@/lib/offers";
 
 export const metadata = {
   title: "عروض الطيران",
-  description: "أحدث عروض تذاكر الطيران بأسعار مخفّضة، محلي ودولي. ابعت طلبك ونرجعلك بأكتر من سعر.",
+  description:
+    "عروض تذاكر طيران بأسعار مخفّضة على رحلات محلية ودولية، بتتحدّث باستمرار. ابعت وجهتك ونرجعلك بأكتر من سعر خلال 24 ساعة.",
 };
 
 export default function OffersPage() {
@@ -13,13 +14,10 @@ export default function OffersPage() {
 
   return (
     <>
-      <section className="page-head">
-        <div className="container">
-          <h1>عروض الطيران</h1>
-          <p>أسعار مخفّضة محلي ودولي. الأسعار بتتغير بسرعة، فأكّد السعر معانا قبل الحجز.</p>
-        </div>
-      </section>
-      <NubianStrip />
+      <PageHead
+        title="عروض الطيران"
+        lead="عروض على رحلات محلية ودولية، بتتحدّث باستمرار. الأسعار في الطيران بتتغير كل يوم، فالسعر المكتوب هو آخر سعر وصلنا، وبنأكدهولك قبل الحجز."
+      />
 
       <section className="section container">
         {offers.length > 0 ? (
@@ -29,15 +27,18 @@ export default function OffersPage() {
             ))}
           </div>
         ) : (
-          <p className="center muted">مفيش عروض متاحة دلوقتي. قولّنا وجهتك ونجيبلك أحسن سعر.</p>
+          <p className="center muted">
+            مفيش عروض متاحة دلوقتي، بس ده مش معناه إننا مش هنلاقيلك سعر كويس. قولّنا رايح فين وإمتى، ونرجعلك
+            بأكتر من اختيار.
+          </p>
         )}
       </section>
 
-      <section className="section section-sand">
+      <section className="section section-sand" id="request">
         <div className="container narrow">
           <h2 className="section-title">مش لاقي وجهتك؟</h2>
-          <p className="section-sub">قولّنا رايح فين، ونرجعلك بأكتر من سعر تختار منهم.</p>
-          <LeadForm title="اطلب سعر لوجهتك" />
+          <p className="section-sub">ابعتلنا المكان والميعاد، وإحنا ندوّرلك.</p>
+          <LeadForm kind="flight" />
         </div>
       </section>
     </>

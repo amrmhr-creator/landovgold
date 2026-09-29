@@ -5,11 +5,15 @@ import { formatDate } from "./offers";
 import { SITE } from "./site";
 
 export type Lead = {
+  kind: "offer" | "flight" | "trip" | "contact";
   name: string;
   phone: string;
-  destination: string;
+  destination: string; // route, program or service, in words
   travelDate: string | null; // YYYY-MM-DD
-  offerSlug: string | null;
+  travelers: number | null;
+  details: string | null; // free text from the contact form
+  offerSlug: string | null; // offer or Aswan program slug
+  marketingOk: boolean; // agreed to receive offers on WhatsApp
   page: string | null;
 };
 
@@ -35,6 +39,15 @@ function logFailure(channel: "db" | "email", err: unknown) {
 
 let pool: mysql.Pool | null = null;
 let tableReady = false;
+
+// Columns added after the first launch; older tables get them on first use.
+const LATER_COLUMNS: [string, string][] = [
+  ["travel_date", "DATE NULL AFTER destination"],
+  ["kind", "VARCHAR(20) NULL AFTER id"],
+  ["travelers", "SMALLINT NULL AFTER travel_date"],
+  ["details", "TEXT NULL AFTER travelers"],
+  ["marketing_ok", "TINYINT(1) NOT NULL DEFAULT 0 AFTER offer_slug"],
+];
 
 function getPool() {
   if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) return null;
@@ -83,25 +96,44 @@ async function saveLead(lead: Lead) {
           id INT AUTO_INCREMENT PRIMARY KEY,
           name VARCHAR(120) NOT NULL,
           phone VARCHAR(40) NOT NULL,
+          kind VARCHAR(20) NULL,
           destination VARCHAR(200) NOT NULL,
           travel_date DATE NULL,
+          travelers SMALLINT NULL,
+          details TEXT NULL,
           offer_slug VARCHAR(120) NULL,
+          marketing_ok TINYINT(1) NOT NULL DEFAULT 0,
           page VARCHAR(200) NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
       `),
     );
-    // Tables created before travel_date existed.
-    const [cols] = await withRetry(() => db.query("SHOW COLUMNS FROM leads LIKE 'travel_date'"));
-    if ((cols as unknown[]).length === 0) {
-      await withRetry(() => db.query("ALTER TABLE leads ADD COLUMN travel_date DATE NULL AFTER destination"));
+    // Tables created before these columns existed.
+    const [rows] = await withRetry(() => db.query("SHOW COLUMNS FROM leads"));
+    const existing = new Set((rows as { Field: string }[]).map((r) => r.Field));
+    for (const [column, definition] of LATER_COLUMNS) {
+      if (!existing.has(column)) {
+        await withRetry(() => db.query(`ALTER TABLE leads ADD COLUMN ${column} ${definition}`));
+      }
     }
     tableReady = true;
   }
   await withRetry(() =>
     db.execute(
-      "INSERT INTO leads (name, phone, destination, travel_date, offer_slug, page) VALUES (?, ?, ?, ?, ?, ?)",
-      [lead.name, lead.phone, lead.destination, lead.travelDate, lead.offerSlug, lead.page],
+      `INSERT INTO leads (kind, name, phone, destination, travel_date, travelers, details, offer_slug, marketing_ok, page)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        lead.kind,
+        lead.name,
+        lead.phone,
+        lead.destination,
+        lead.travelDate,
+        lead.travelers,
+        lead.details,
+        lead.offerSlug,
+        lead.marketingOk ? 1 : 0,
+        lead.page,
+      ],
     ),
   );
   return true;
@@ -113,6 +145,13 @@ async function saveLead(lead: Lead) {
 function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
+
+const KIND_LABEL: Record<Lead["kind"], string> = {
+  offer: "العرض",
+  flight: "الوجهة",
+  trip: "البرنامج",
+  contact: "الخدمة",
+};
 
 async function emailLead(lead: Lead) {
   const { SMTP_HOST, SMTP_USER, SMTP_PASSWORD } = process.env;
@@ -134,8 +173,11 @@ async function emailLead(lead: Lead) {
   const rows = [
     ["الاسم", lead.name],
     ["الرقم", lead.phone],
-    ["الوجهة / العرض", lead.destination],
+    [KIND_LABEL[lead.kind], lead.destination],
     ["تاريخ السفر", lead.travelDate ? formatDate(lead.travelDate) : "-"],
+    ["عدد المسافرين", lead.travelers ? String(lead.travelers) : "-"],
+    ["التفاصيل", lead.details ?? "-"],
+    ["موافق على العروض", lead.marketingOk ? "أيوه" : "لأ"],
     ["الصفحة", lead.page ?? "-"],
   ];
   await transport.sendMail({

@@ -5,9 +5,13 @@ export type Offer = {
   slug: string;
   from: string;
   to: string;
-  price: number; // in EGP
+  price: number; // starting price per person, in EGP
+  tripType: "ذهاب فقط" | "ذهاب وعودة";
   date: string; // ISO date of travel, e.g. "2026-11-15"
-  details: string[];
+  airline: string;
+  transit: string; // "طيران مباشر" or e.g. "ترانزيت في جدة"
+  baggage: string; // e.g. "شنطة 23 كيلو"
+  extras?: string[]; // anything else worth saying
   available: boolean;
   sample?: boolean; // placeholder offer, shown with an "مثال" badge
 };
@@ -18,8 +22,11 @@ export const OFFERS: Offer[] = [
     from: "القاهرة",
     to: "الرياض",
     price: 9500,
+    tripType: "ذهاب فقط",
     date: "2026-11-12",
-    details: ["ذهاب فقط", "شنطة 23 كيلو", "طيران مباشر"],
+    airline: "مصر للطيران",
+    transit: "طيران مباشر",
+    baggage: "شنطة 23 كيلو",
     available: true,
     sample: true,
   },
@@ -28,8 +35,11 @@ export const OFFERS: Offer[] = [
     from: "القاهرة",
     to: "دبي",
     price: 11200,
+    tripType: "ذهاب وعودة",
     date: "2026-11-20",
-    details: ["ذهاب وعودة", "شنطة 30 كيلو", "ترانزيت واحد"],
+    airline: "طيران الإمارات",
+    transit: "طيران مباشر",
+    baggage: "شنطة 30 كيلو",
     available: true,
     sample: true,
   },
@@ -38,8 +48,11 @@ export const OFFERS: Offer[] = [
     from: "القاهرة",
     to: "أسوان",
     price: 3400,
+    tripType: "ذهاب وعودة",
     date: "2026-12-05",
-    details: ["ذهاب وعودة", "شنطة 20 كيلو", "طيران مباشر"],
+    airline: "مصر للطيران",
+    transit: "طيران مباشر",
+    baggage: "شنطة 20 كيلو",
     available: true,
     sample: true,
   },

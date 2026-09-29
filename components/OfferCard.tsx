@@ -9,12 +9,18 @@ export default function OfferCard({ offer }: { offer: Offer }) {
       <h3>{offerTitle(offer)}</h3>
       <dl>
         <div>
-          <dt>السعر</dt>
+          <dt>يبدأ من</dt>
           <dd>{formatPrice(offer.price)}</dd>
         </div>
         <div>
           <dt>التاريخ</dt>
           <dd>{formatDate(offer.date)}</dd>
+        </div>
+        <div>
+          <dt>الرحلة</dt>
+          <dd>
+            {offer.tripType} · {offer.transit}
+          </dd>
         </div>
       </dl>
       <Link className="btn btn-gold btn-block" href={`/offers/${offer.slug}`}>
