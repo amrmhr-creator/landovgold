@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import JsonLd from "@/components/JsonLd";
 import LeadForm from "@/components/LeadForm";
 import PageHead from "@/components/PageHead";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { OFFERS, formatDate, formatPrice, getOffer, offerTitle } from "@/lib/offers";
+import { offerLd } from "@/lib/seo";
 import { whatsappLink } from "@/lib/site";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -41,6 +43,8 @@ export default async function OfferPage({ params }: Params) {
 
   return (
     <>
+      {/* Sample offers aren't real, so they don't get offer markup. */}
+      {!offer.sample && <JsonLd data={offerLd(offer)} />}
       <PageHead title={title} back={{ href: "/offers", label: "كل العروض" }} />
 
       <section className="section container offer-layout">

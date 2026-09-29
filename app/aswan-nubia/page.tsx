@@ -1,9 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
+import JsonLd from "@/components/JsonLd";
 import LeadForm from "@/components/LeadForm";
 import PageHead from "@/components/PageHead";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { formatPrice } from "@/lib/offers";
+import { tripLd } from "@/lib/seo";
 import { whatsappLink } from "@/lib/site";
 import { TRAIN_DISCOUNT, TRIPS, TRIP_EXCLUDES, TRIP_INCLUDES } from "@/lib/trips";
 
@@ -23,6 +25,9 @@ const GALLERY = [
 export default function Page() {
   return (
     <>
+      {TRIPS.map((t) => (
+        <JsonLd key={t.slug} data={tripLd(t)} />
+      ))}
       <PageHead
         title="رحلات أسوان والنوبة"
         lead="أسوان في الشتا حاجة تانية: شمس دافية، ونيل هادي، وناس بتستقبلك كأنك من أهل البيت. برامجنا مترتبة من أول ما توصل لحد ما ترجع، وبتوريك أسوان زي ما أهلها يعرفوها."

@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Cairo } from "next/font/google";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import JsonLd from "@/components/JsonLd";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
+import { organizationLd } from "@/lib/seo";
 import { SITE } from "@/lib/site";
 import "./globals.css";
 
@@ -26,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ar" dir="rtl" className={cairo.variable}>
       <body>
+        <JsonLd data={organizationLd()} />
         <Header />
         <main>{children}</main>
         <Footer />

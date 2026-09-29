@@ -1,6 +1,8 @@
+import JsonLd from "@/components/JsonLd";
 import PageHead from "@/components/PageHead";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { FAQ } from "@/lib/faq";
+import { faqLd } from "@/lib/seo";
 import { whatsappLink } from "@/lib/site";
 
 export const metadata = {
@@ -11,6 +13,7 @@ export const metadata = {
 export default function Page() {
   return (
     <>
+      <JsonLd data={faqLd(FAQ)} />
       <PageHead title="الأسئلة الشائعة" lead="أسئلة وأجوبة عن الحجز والدفع والرحلات." />
       <section className="section container prose">
         {FAQ.map((group) => (
