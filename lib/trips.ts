@@ -49,7 +49,7 @@ export const TRIPS: Trip[] = [
     price: 9950,
     summary: "النيل والفلوكة، ومعبد فيلة، والمسلة الناقصة والسد العالي، وغدا في بيت نوبي في غرب سهيل.",
     itinerary: [...BASE_DAYS, { ...LAST_DAY, title: "اليوم التالت: السوق والرجوع" }],
-    image: { src: "/images/trips/nile.webp", alt: "فلوكة في النيل" },
+    image: { src: "/images/trips/nile.webp", alt: "معبد فيلة على النيل" },
   },
   {
     slug: "aswan-abu-simbel-4-days",
@@ -70,7 +70,7 @@ export const TRIPS: Trip[] = [
       },
       { ...LAST_DAY, title: "اليوم الرابع: السوق والرجوع" },
     ],
-    image: { src: "/images/trips/temple.webp", alt: "معبد مصري قديم" },
+    image: { src: "/images/trips/temple.webp", alt: "تماثيل معبد أبو سمبل" },
   },
 ];
 

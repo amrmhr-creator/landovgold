@@ -547,6 +547,115 @@ img {
   color: var(--muted);
 }
 
+/* ---------- Aswan trips ---------- */
+.trips {
+  display: grid;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .trips {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.trip-card {
+  padding: 0;
+  overflow: hidden;
+  border-top: 4px solid var(--gold);
+}
+
+.trip-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+
+.trip-body {
+  padding: 24px 28px 28px;
+}
+
+.trip-body > p {
+  margin: 0 0 8px;
+}
+
+.trip-price {
+  font-size: 18px;
+}
+
+.trip-price strong {
+  color: var(--gold-dark);
+  font-size: 24px;
+}
+
+.trip-day {
+  margin-block: 16px;
+  padding-inline-start: 14px;
+  border-inline-start: 3px solid var(--sand-deep);
+}
+
+.trip-day h3 {
+  font-size: 17px;
+  margin-bottom: 4px;
+}
+
+.trip-day ul {
+  margin: 0;
+  padding-inline-start: 18px;
+}
+
+.check-list,
+.x-list {
+  list-style: none;
+  padding: 0;
+}
+
+.check-list li::before,
+.x-list li::before {
+  display: inline-block;
+  width: 1.4em;
+  font-weight: 800;
+}
+
+.check-list li::before {
+  content: "✓";
+  color: #1a8a4a;
+}
+
+.x-list li::before {
+  content: "✕";
+  color: #b3261e;
+}
+
+.center-block {
+  margin-inline: auto;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 48px;
+}
+
+@media (min-width: 720px) {
+  .gallery {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.gallery img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
 /* ---------- FAQ ---------- */
 .faq-item {
   margin-bottom: 10px;
