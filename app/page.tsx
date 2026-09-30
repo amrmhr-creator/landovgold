@@ -2,8 +2,11 @@ import Link from "next/link";
 import NubianStrip from "@/components/NubianStrip";
 import OfferCard from "@/components/OfferCard";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
-import { availableOffers } from "@/lib/offers";
+import { bookableOffers } from "@/lib/offers-data";
 import { SITE, whatsappLink } from "@/lib/site";
+
+// Offers come from the database, so the page is rendered on each visit.
+export const dynamic = "force-dynamic";
 
 const STEPS = [
   { title: "ابعتلنا طلبك", text: "على واتساب أو من الفورم: رايح فين، وإمتى، وكام فرد." },
@@ -18,8 +21,8 @@ const WHY = [
   { title: "واضحين من الأول", text: "السعر اللي نتفق عليه هو اللي تدفعه، وشروط الإلغاء مكتوبة قدامك." },
 ];
 
-export default function HomePage() {
-  const latestOffers = availableOffers().slice(0, 3);
+export default async function HomePage() {
+  const latestOffers = (await bookableOffers()).slice(0, 3);
 
   return (
     <>

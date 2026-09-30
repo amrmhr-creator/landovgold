@@ -3,6 +3,7 @@ import { Cairo } from "next/font/google";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import JsonLd from "@/components/JsonLd";
+import SiteChrome from "@/components/SiteChrome";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import { organizationLd } from "@/lib/seo";
 import { SITE } from "@/lib/site";
@@ -29,10 +30,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ar" dir="rtl" className={cairo.variable}>
       <body>
         <JsonLd data={organizationLd()} />
-        <Header />
+        <SiteChrome>
+          <Header />
+        </SiteChrome>
         <main>{children}</main>
-        <Footer />
-        <WhatsAppFloat />
+        <SiteChrome>
+          <Footer />
+          <WhatsAppFloat />
+        </SiteChrome>
       </body>
     </html>
   );

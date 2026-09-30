@@ -1,7 +1,10 @@
 import LeadForm from "@/components/LeadForm";
 import OfferCard from "@/components/OfferCard";
 import PageHead from "@/components/PageHead";
-import { availableOffers } from "@/lib/offers";
+import { bookableOffers } from "@/lib/offers-data";
+
+// Offers come from the database, so the page is rendered on each visit.
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "عروض الطيران",
@@ -9,8 +12,8 @@ export const metadata = {
     "عروض تذاكر طيران بأسعار مخفّضة على رحلات محلية ودولية، بتتحدّث باستمرار. ابعت وجهتك ونرجعلك بأكتر من سعر خلال 24 ساعة.",
 };
 
-export default function OffersPage() {
-  const offers = availableOffers();
+export default async function OffersPage() {
+  const offers = await bookableOffers();
 
   return (
     <>

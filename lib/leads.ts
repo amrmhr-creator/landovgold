@@ -1,6 +1,6 @@
 import "server-only";
-import mysql from "mysql2/promise";
 import nodemailer from "nodemailer";
+import { dbConfigured, describeError, query } from "./db";
 import { formatDate } from "./offers";
 import { SITE } from "./site";
 
@@ -17,27 +17,13 @@ export type Lead = {
   page: string | null;
 };
 
-// ---------- Logging ----------
-// Hostinger runs several app processes at once, so every line carries the pid.
-// Only error codes, server replies and messages are logged: never the config or credentials.
-
-function describeError(err: unknown) {
-  if (!(err instanceof Error)) return String(err);
-  const e = err as Error & Record<string, unknown>;
-  const fields = ["code", "errno", "sqlState", "responseCode", "command", "response"]
-    .filter((k) => e[k] !== undefined && e[k] !== "")
-    .map((k) => `${k}=${JSON.stringify(e[k])}`);
-  return [...fields, `message=${JSON.stringify(e.message)}`].join(" ");
-}
-
+// Hostinger runs several app processes at once, so every log line carries the pid.
 function logFailure(channel: "db" | "email", err: unknown) {
   console.error(`[leads] pid ${process.pid}: ${channel} failed: ${describeError(err)}`);
 }
 
 // ---------- MySQL ----------
-// Configure with DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME (set in hPanel, never in git).
 
-let pool: mysql.Pool | null = null;
 let tableReady = false;
 
 // Columns added after the first launch; older tables get them on first use.
@@ -49,49 +35,10 @@ const LATER_COLUMNS: [string, string][] = [
   ["marketing_ok", "TINYINT(1) NOT NULL DEFAULT 0 AFTER offer_slug"],
 ];
 
-function getPool() {
-  if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) return null;
-  pool ??= mysql.createPool({
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT || 3306),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    charset: "utf8mb4",
-    // Several app processes each hold their own pool; keep each one small, and drop idle
-    // connections before shared-hosting MySQL times them out on its side.
-    connectionLimit: 2,
-    maxIdle: 1,
-    idleTimeout: 20_000,
-    enableKeepAlive: true,
-    connectTimeout: 10_000,
-  });
-  return pool;
-}
-
-// A pooled connection the server already closed fails once; a fresh one then works.
-const STALE_CONNECTION = new Set(["PROTOCOL_CONNECTION_LOST", "ECONNRESET", "EPIPE", "ETIMEDOUT"]);
-
-async function withRetry<T>(run: () => Promise<T>): Promise<T> {
-  try {
-    return await run();
-  } catch (err) {
-    const code = (err as { code?: string }).code;
-    if (!code || !STALE_CONNECTION.has(code)) throw err;
-    console.warn(`[leads] pid ${process.pid}: db connection dropped (${code}), retrying once`);
-    return run();
-  }
-}
-
-async function saveLead(lead: Lead) {
-  const db = getPool();
-  if (!db) {
-    console.error(`[leads] pid ${process.pid}: db skipped: DB_HOST, DB_USER or DB_NAME is not set`);
-    return false;
-  }
-  if (!tableReady) {
-    await withRetry(() =>
-      db.query(`
+/** Creates the leads table, or adds columns an older table is missing. Once per process. */
+export async function ensureLeadsTable() {
+  if (tableReady) return;
+  await query(`
         CREATE TABLE IF NOT EXISTS leads (
           id INT AUTO_INCREMENT PRIMARY KEY,
           name VARCHAR(120) NOT NULL,
@@ -106,37 +53,92 @@ async function saveLead(lead: Lead) {
           page VARCHAR(200) NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
-      `),
-    );
-    // Tables created before these columns existed.
-    const [rows] = await withRetry(() => db.query("SHOW COLUMNS FROM leads"));
-    const existing = new Set((rows as { Field: string }[]).map((r) => r.Field));
-    for (const [column, definition] of LATER_COLUMNS) {
-      if (!existing.has(column)) {
-        await withRetry(() => db.query(`ALTER TABLE leads ADD COLUMN ${column} ${definition}`));
-      }
-    }
-    tableReady = true;
+      `);
+  // Tables created before these columns existed.
+  const rows = await query<{ Field: string }[]>("SHOW COLUMNS FROM leads");
+  const existing = new Set(rows.map((r) => r.Field));
+  for (const [column, definition] of LATER_COLUMNS) {
+    if (!existing.has(column)) await query(`ALTER TABLE leads ADD COLUMN ${column} ${definition}`);
   }
-  await withRetry(() =>
-    db.execute(
-      `INSERT INTO leads (kind, name, phone, destination, travel_date, travelers, details, offer_slug, marketing_ok, page)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        lead.kind,
-        lead.name,
-        lead.phone,
-        lead.destination,
-        lead.travelDate,
-        lead.travelers,
-        lead.details,
-        lead.offerSlug,
-        lead.marketingOk ? 1 : 0,
-        lead.page,
-      ],
-    ),
+  tableReady = true;
+}
+
+async function saveLead(lead: Lead) {
+  if (!dbConfigured()) {
+    console.error(`[leads] pid ${process.pid}: db skipped: DB_HOST, DB_USER or DB_NAME is not set`);
+    return false;
+  }
+  await ensureLeadsTable();
+  await query(
+    `INSERT INTO leads (kind, name, phone, destination, travel_date, travelers, details, offer_slug, marketing_ok, page)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      lead.kind,
+      lead.name,
+      lead.phone,
+      lead.destination,
+      lead.travelDate,
+      lead.travelers,
+      lead.details,
+      lead.offerSlug,
+      lead.marketingOk ? 1 : 0,
+      lead.page,
+    ],
   );
   return true;
+}
+
+export type LeadRow = Omit<Lead, "kind"> & {
+  id: number;
+  kind: Lead["kind"] | null; // null for leads saved before kinds existed
+  createdAt: number; // unix seconds
+};
+
+/** Counts for the admin home page. */
+export async function leadStats() {
+  await ensureLeadsTable();
+  const [row] = await query<Record<string, unknown>[]>(
+    `SELECT COUNT(*) AS total,
+            COALESCE(SUM(created_at >= NOW() - INTERVAL 7 DAY), 0) AS week,
+            COALESCE(SUM(marketing_ok = 1), 0) AS marketing
+     FROM leads`,
+  );
+  return { total: Number(row.total), week: Number(row.week), marketing: Number(row.marketing) };
+}
+
+/** Latest leads first, for the admin panel. */
+export async function listLeads(filter: { kind?: string; marketingOnly?: boolean }, limit = 500) {
+  await ensureLeadsTable();
+  const where: string[] = [];
+  const params: unknown[] = [];
+  if (filter.kind) {
+    where.push("kind = ?");
+    params.push(filter.kind);
+  }
+  if (filter.marketingOnly) where.push("marketing_ok = 1");
+  const rows = await query<Record<string, unknown>[]>(
+    `SELECT id, kind, name, phone, destination, travel_date, travelers, details, offer_slug, marketing_ok, page,
+            UNIX_TIMESTAMP(created_at) AS created
+     FROM leads ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
+     ORDER BY id DESC LIMIT ${Number(limit)}`,
+    params,
+  );
+  return rows.map(
+    (r): LeadRow => ({
+      id: Number(r.id),
+      kind: (r.kind as Lead["kind"] | null) ?? null,
+      name: String(r.name),
+      phone: String(r.phone),
+      destination: String(r.destination),
+      travelDate: (r.travel_date as string | null) ?? null,
+      travelers: r.travelers == null ? null : Number(r.travelers),
+      details: (r.details as string | null) ?? null,
+      offerSlug: (r.offer_slug as string | null) ?? null,
+      marketingOk: Number(r.marketing_ok) === 1,
+      page: (r.page as string | null) ?? null,
+      createdAt: Number(r.created),
+    }),
+  );
 }
 
 // ---------- Email ----------
@@ -146,7 +148,7 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
-const KIND_LABEL: Record<Lead["kind"], string> = {
+export const KIND_LABEL: Record<Lead["kind"], string> = {
   offer: "العرض",
   flight: "الوجهة",
   trip: "البرنامج",

@@ -5,20 +5,18 @@ import JsonLd from "@/components/JsonLd";
 import LeadForm from "@/components/LeadForm";
 import PageHead from "@/components/PageHead";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
-import { OFFERS, formatDate, formatPrice, getOffer, offerTitle } from "@/lib/offers";
+import { formatDate, formatPrice, isBookable, offerTitle } from "@/lib/offers";
+import { getOffer } from "@/lib/offers-data";
 import { offerLd } from "@/lib/seo";
 import { whatsappLink } from "@/lib/site";
 
 type Params = { params: Promise<{ slug: string }> };
 
-export function generateStaticParams() {
-  return OFFERS.map((o) => ({ slug: o.slug }));
-}
-
-export const dynamicParams = false;
+// Offers are added from the admin panel at any time, so each page is rendered on request.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const offer = getOffer((await params).slug);
+  const offer = await getOffer(decodeURIComponent((await params).slug));
   if (!offer) return {};
   const title = `عرض طيران ${offerTitle(offer)} يبدأ من ${formatPrice(offer.price)}`;
   const description = `${offer.tripType} على ${offer.airline}، ${formatDate(offer.date)}. ${offer.transit}، ${offer.baggage}. احجز على واتساب أو سيب بياناتك.`;
@@ -26,8 +24,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 export default async function OfferPage({ params }: Params) {
-  const offer = getOffer((await params).slug);
+  const offer = await getOffer(decodeURIComponent((await params).slug));
   if (!offer) notFound();
+  const bookable = isBookable(offer);
 
   const title = offerTitle(offer);
   const label = `${offer.from} إلى ${offer.to} يوم ${formatDate(offer.date)}`;
@@ -44,13 +43,13 @@ export default async function OfferPage({ params }: Params) {
   return (
     <>
       {/* Sample offers aren't real, so they don't get offer markup. */}
-      {!offer.sample && <JsonLd data={offerLd(offer)} />}
+      {!offer.sample && bookable && <JsonLd data={offerLd(offer)} />}
       <PageHead title={title} back={{ href: "/offers", label: "كل العروض" }} />
 
       <section className="section container offer-layout">
         <div className="offer-main">
           {offer.sample && <p className="badge badge-inline">مثال — مش عرض حقيقي</p>}
-          {!offer.available && <p className="notice">العرض ده انتهى. كلّمنا ونجيبلك أقرب سعر ليه.</p>}
+          {!bookable && <p className="notice">العرض ده انتهى. كلّمنا ونجيبلك أقرب سعر ليه.</p>}
           <dl className="offer-facts">
             <div>
               <dt>السعر يبدأ من</dt>

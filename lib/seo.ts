@@ -95,7 +95,7 @@ export function offerLd(o: Offer) {
     description: `${o.airline}، ${o.transit}، ${o.baggage}`,
     price: o.price,
     priceCurrency: "EGP",
-    availability: o.available ? "https://schema.org/InStock" : "https://schema.org/SoldOut",
+    availability: "https://schema.org/InStock",
     validThrough: o.date,
     url: `${SITE.url}/offers/${o.slug}`,
     seller: { "@id": ORG_ID },

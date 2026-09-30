@@ -1,7 +1,9 @@
-// Flight offers. Until the admin panel exists, offers are edited here and go live on push.
-// Each offer gets its own page at /offers/<slug> — that's the link that goes in the social post.
+// Flight offers: the type and display helpers (safe in the browser too).
+// Offers themselves live in MySQL and are managed from /admin/offers; lib/offers-data.ts reads them.
+// Each offer gets its own page at /offers/<slug>: that's the link that goes in the social post.
 
 export type Offer = {
+  id?: number; // set for offers stored in the database
   slug: string;
   from: string;
   to: string;
@@ -16,7 +18,8 @@ export type Offer = {
   sample?: boolean; // placeholder offer, shown with an "مثال" badge
 };
 
-export const OFFERS: Offer[] = [
+/** Shown only when no database is configured (local development). */
+export const SAMPLE_OFFERS: Offer[] = [
   {
     slug: "cairo-riyadh",
     from: "القاهرة",
@@ -75,10 +78,12 @@ export function formatDate(iso: string) {
   });
 }
 
-export function getOffer(slug: string) {
-  return OFFERS.find((o) => o.slug === slug);
+/** Today in Cairo as YYYY-MM-DD. */
+export function cairoToday() {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
 }
 
-export function availableOffers() {
-  return OFFERS.filter((o) => o.available).sort((a, b) => a.date.localeCompare(b.date));
+/** Listed on the site: not hidden, and the travel date hasn't passed. */
+export function isBookable(o: Offer) {
+  return o.available && o.date >= cairoToday();
 }

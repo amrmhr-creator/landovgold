@@ -7,13 +7,14 @@ type Props = {
   name: string;
   label: string;
   placeholder?: string;
+  defaultValue?: string;
 };
 
 /** Searchable airport picker. Free text is still accepted for airports not in the list. */
-export default function AirportInput({ name, label, placeholder }: Props) {
+export default function AirportInput({ name, label, placeholder, defaultValue = "" }: Props) {
   const id = useId();
   const listId = `${id}-list`;
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(defaultValue);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const results = searchAirports(value);

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { describeError } from "@/lib/db";
 import { SERVICES, TRANSPORT } from "@/lib/lead-options";
 import { submitLead, type Lead } from "@/lib/leads";
-import { getOffer, offerTitle } from "@/lib/offers";
+import { offerTitle } from "@/lib/offers";
+import { getOffer } from "@/lib/offers-data";
 import { getTrip } from "@/lib/trips";
 
 // Spam brake: 10 stored leads per IP per 10 minutes. Only successes count, so a visitor
@@ -51,7 +53,7 @@ const oneOf = <T extends string>(options: readonly T[], v: string): T | null =>
 class InvalidLead extends Error {}
 
 /** The request part of the lead, per form kind. Throws InvalidLead with the message to show. */
-function parseRequest(body: Record<string, unknown>): Omit<Lead, "name" | "phone" | "marketingOk" | "page"> {
+async function parseRequest(body: Record<string, unknown>): Promise<Omit<Lead, "name" | "phone" | "marketingOk" | "page">> {
   const kind = clean(body.kind, 20);
   const needDate = () => {
     const date = validTravelDate(clean(body.date, 10));
@@ -65,7 +67,15 @@ function parseRequest(body: Record<string, unknown>): Omit<Lead, "name" | "phone
   };
 
   if (kind === "offer") {
-    const offer = getOffer(clean(body.offer, 120));
+    const slug = clean(body.offer, 120);
+    let offer;
+    try {
+      offer = await getOffer(slug);
+    } catch (err) {
+      // The database is down, but the email can still carry the lead.
+      console.error(`[leads] pid ${process.pid}: offer lookup failed: ${describeError(err)}`);
+      return { kind, destination: `عرض ${slug}`, travelDate: null, travelers: null, details: null, offerSlug: slug };
+    }
     if (!offer) throw new InvalidLead("العرض ده مش موجود.");
     return { kind, destination: offerTitle(offer), travelDate: offer.date, travelers: null, details: null, offerSlug: offer.slug };
   }
@@ -112,7 +122,7 @@ export async function POST(req: Request) {
 
   let request;
   try {
-    request = parseRequest(body);
+    request = await parseRequest(body);
   } catch (err) {
     if (err instanceof InvalidLead) return NextResponse.json({ error: err.message }, { status: 400 });
     throw err;
