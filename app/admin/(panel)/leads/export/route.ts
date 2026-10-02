@@ -1,6 +1,7 @@
 import { isAdmin } from "@/lib/admin-auth";
-import { LEAD_KINDS, formatCairoTime, leadKindLabel, whatsappDigits } from "@/lib/admin-format";
+import { formatCairoTime, leadKindLabel, parseLeadSection, whatsappDigits } from "@/lib/admin-format";
 import { dbConfigured } from "@/lib/db";
+import { LEAD_SECTION_LABEL } from "@/lib/lead-options";
 import { listLeads } from "@/lib/leads";
 import { cairoToday } from "@/lib/offers";
 
@@ -12,9 +13,8 @@ export async function GET(req: Request) {
   if (!dbConfigured()) return new Response("قاعدة البيانات مش متوصلة", { status: 503 });
 
   const url = new URL(req.url);
-  const kindParam = url.searchParams.get("kind") ?? undefined;
-  const kind = LEAD_KINDS.some((k) => k.key === kindParam) ? kindParam : undefined;
-  const leads = await listLeads({ kind, marketingOnly: url.searchParams.get("marketing") === "1" }, 5000);
+  const section = parseLeadSection(url.searchParams.get("section"));
+  const leads = await listLeads({ section, marketingOnly: url.searchParams.get("marketing") === "1" }, 5000);
 
   // Quote every cell, and defuse text Excel would run as a formula (phone numbers like +971… stay as they are).
   const cell = (v: unknown) => {
@@ -22,9 +22,10 @@ export async function GET(req: Request) {
     if (/^[=@]|^[+\-](?![\d\s]*$)/.test(s)) s = `'${s}`;
     return `"${s.replace(/"/g, '""')}"`;
   };
-  const header = ["وصل إمتى", "الاسم", "الرقم", "واتساب", "النوع", "الطلب", "تاريخ السفر", "عدد الأفراد", "التفاصيل", "موافق على العروض", "الصفحة"];
+  const header = ["وصل إمتى", "القسم", "الاسم", "الرقم", "واتساب", "النوع", "الطلب", "تاريخ السفر", "عدد الأفراد", "التفاصيل", "موافق على العروض", "الصفحة"];
   const rows = leads.map((l) => [
     formatCairoTime(l.createdAt),
+    LEAD_SECTION_LABEL[l.section],
     l.name,
     l.phone,
     `https://wa.me/${whatsappDigits(l.phone)}`,

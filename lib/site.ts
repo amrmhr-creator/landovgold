@@ -23,16 +23,16 @@ export const SOCIAL: { label: string; href: string }[] = [
   // { label: "تيك توك", href: "https://tiktok.com/@..." },
 ];
 
-export const NAV = [
-  { href: "/", label: "الرئيسية" },
-  { href: "/offers", label: "عروض الطيران" },
-  { href: "/aswan-nubia", label: "رحلات أسوان والنوبة" },
+// The menu: the service sections (lib/sections.ts) first, then these company pages
+// grouped under "عن بلاد الدهب", then the contact page.
+export const COMPANY_NAV = [
   { href: "/how-we-work", label: "إزاي بنشتغل" },
   { href: "/about", label: "مين احنا" },
   { href: "/blog", label: "المدوّنة" },
   { href: "/faq", label: "الأسئلة الشائعة" },
-  { href: "/contact", label: "تواصل معانا" },
 ];
+
+export const CONTACT_NAV = { href: "/contact", label: "تواصل معانا" };
 
 export const LEGAL = [
   { href: "/terms", label: "الشروط والأحكام" },

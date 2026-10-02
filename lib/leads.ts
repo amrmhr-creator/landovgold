@@ -1,11 +1,13 @@
 import "server-only";
 import nodemailer from "nodemailer";
 import { dbConfigured, describeError, query } from "./db";
+import { LEAD_SECTION_LABEL, type LeadSection } from "./lead-options";
 import { formatDate } from "./offers";
 import { SITE } from "./site";
 
 export type Lead = {
   kind: "offer" | "flight" | "trip" | "contact";
+  section: LeadSection;
   name: string;
   phone: string;
   destination: string; // route, program or service, in words
@@ -33,7 +35,20 @@ const LATER_COLUMNS: [string, string][] = [
   ["travelers", "SMALLINT NULL AFTER travel_date"],
   ["details", "TEXT NULL AFTER travelers"],
   ["marketing_ok", "TINYINT(1) NOT NULL DEFAULT 0 AFTER offer_slug"],
+  ["section", "VARCHAR(20) NULL AFTER kind"],
 ];
+
+// Leads saved before sections existed get theirs from the form they came through.
+// Leads from before form kinds existed all came from the flights pages.
+const BACKFILL_SECTION = `
+  UPDATE leads SET section = CASE
+    WHEN kind IS NULL OR kind IN ('offer', 'flight') THEN 'flights'
+    WHEN kind = 'trip' THEN 'aswan'
+    WHEN destination = 'تذكرة طيران' THEN 'flights'
+    WHEN destination = 'رحلة أسوان والنوبة' THEN 'aswan'
+    ELSE 'general'
+  END
+  WHERE section IS NULL`;
 
 /** Creates the leads table, or adds columns an older table is missing. Once per process. */
 export async function ensureLeadsTable() {
@@ -44,6 +59,7 @@ export async function ensureLeadsTable() {
           name VARCHAR(120) NOT NULL,
           phone VARCHAR(40) NOT NULL,
           kind VARCHAR(20) NULL,
+          section VARCHAR(20) NULL,
           destination VARCHAR(200) NOT NULL,
           travel_date DATE NULL,
           travelers SMALLINT NULL,
@@ -60,6 +76,7 @@ export async function ensureLeadsTable() {
   for (const [column, definition] of LATER_COLUMNS) {
     if (!existing.has(column)) await query(`ALTER TABLE leads ADD COLUMN ${column} ${definition}`);
   }
+  await query(BACKFILL_SECTION);
   tableReady = true;
 }
 
@@ -70,10 +87,11 @@ async function saveLead(lead: Lead) {
   }
   await ensureLeadsTable();
   await query(
-    `INSERT INTO leads (kind, name, phone, destination, travel_date, travelers, details, offer_slug, marketing_ok, page)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO leads (kind, section, name, phone, destination, travel_date, travelers, details, offer_slug, marketing_ok, page)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       lead.kind,
+      lead.section,
       lead.name,
       lead.phone,
       lead.destination,
@@ -107,17 +125,17 @@ export async function leadStats() {
 }
 
 /** Latest leads first, for the admin panel. */
-export async function listLeads(filter: { kind?: string; marketingOnly?: boolean }, limit = 500) {
+export async function listLeads(filter: { section?: LeadSection; marketingOnly?: boolean }, limit = 500) {
   await ensureLeadsTable();
   const where: string[] = [];
   const params: unknown[] = [];
-  if (filter.kind) {
-    where.push("kind = ?");
-    params.push(filter.kind);
+  if (filter.section) {
+    where.push("section = ?");
+    params.push(filter.section);
   }
   if (filter.marketingOnly) where.push("marketing_ok = 1");
   const rows = await query<Record<string, unknown>[]>(
-    `SELECT id, kind, name, phone, destination, travel_date, travelers, details, offer_slug, marketing_ok, page,
+    `SELECT id, kind, section, name, phone, destination, travel_date, travelers, details, offer_slug, marketing_ok, page,
             UNIX_TIMESTAMP(created_at) AS created
      FROM leads ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
      ORDER BY id DESC LIMIT ${Number(limit)}`,
@@ -127,6 +145,7 @@ export async function listLeads(filter: { kind?: string; marketingOnly?: boolean
     (r): LeadRow => ({
       id: Number(r.id),
       kind: (r.kind as Lead["kind"] | null) ?? null,
+      section: (r.section as LeadSection | null) ?? "general",
       name: String(r.name),
       phone: String(r.phone),
       destination: String(r.destination),
@@ -173,6 +192,7 @@ async function emailLead(lead: Lead) {
     socketTimeout: 20_000,
   });
   const rows = [
+    ["القسم", LEAD_SECTION_LABEL[lead.section]],
     ["الاسم", lead.name],
     ["الرقم", lead.phone],
     [KIND_LABEL[lead.kind], lead.destination],
@@ -185,7 +205,8 @@ async function emailLead(lead: Lead) {
   await transport.sendMail({
     from: `"${SITE.name} - الموقع" <${SMTP_USER}>`,
     to: process.env.LEADS_EMAIL || SITE.email,
-    subject: `طلب جديد: ${lead.destination} - ${lead.name}`,
+    // The section leads the subject, so the inbox can be sorted or filtered by it.
+    subject: `[${LEAD_SECTION_LABEL[lead.section]}] طلب جديد: ${lead.destination} - ${lead.name}`,
     text: rows.map(([k, v]) => `${k}: ${v}`).join("\n"),
     html: `<div dir="rtl" style="font-family:sans-serif">${rows
       .map(([k, v]) => `<p><b>${k}:</b> ${escapeHtml(v)}</p>`)

@@ -88,3 +88,8 @@ export const TRIP_EXCLUDES = ["تذاكر دخول الأماكن الأثرية
 export function getTrip(slug: string) {
   return TRIPS.find((t) => t.slug === slug);
 }
+
+/** Each program has its own page; this is the link to it. */
+export function tripHref(t: Trip) {
+  return `/aswan-nubia/${t.slug}`;
+}

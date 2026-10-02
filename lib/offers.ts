@@ -1,6 +1,6 @@
 // Flight offers: the type and display helpers (safe in the browser too).
 // Offers themselves live in MySQL and are managed from /admin/offers; lib/offers-data.ts reads them.
-// Each offer gets its own page at /offers/<slug>: that's the link that goes in the social post.
+// Each offer gets its own page at /flights/<slug>: that's the link that goes in the social post.
 
 export type Offer = {
   id?: number; // set for offers stored in the database

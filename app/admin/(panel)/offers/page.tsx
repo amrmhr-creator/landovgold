@@ -33,7 +33,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ s
     }
   }
 
-  const savedLink = saved ? `${SITE.url}/offers/${saved}` : null;
+  const savedLink = saved ? `${SITE.url}/flights/${saved}` : null;
 
   return (
     <>
@@ -50,7 +50,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ s
             <strong>✓ العرض اتحفظ.</strong> ده اللينك اللي تحطه في البوست:
           </p>
           <p className="admin-link">
-            <a href={`/offers/${saved}`} target="_blank" dir="ltr">
+            <a href={`/flights/${saved}`} target="_blank" dir="ltr">
               {savedLink}
             </a>{" "}
             <CopyButton text={savedLink} />
@@ -91,7 +91,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ s
                       <span className={`admin-status ${s.className}`}>{s.label}</span>
                     </td>
                     <td className="admin-row-actions">
-                      <CopyButton text={`${SITE.url}/offers/${o.slug}`} />
+                      <CopyButton text={`${SITE.url}/flights/${o.slug}`} />
                       <Link className="btn btn-outline btn-sm" href={`/admin/offers/${o.id}`}>
                         تعديل
                       </Link>

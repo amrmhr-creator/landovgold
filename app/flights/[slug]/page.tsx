@@ -44,7 +44,7 @@ export default async function OfferPage({ params }: Params) {
     <>
       {/* Sample offers aren't real, so they don't get offer markup. */}
       {!offer.sample && bookable && <JsonLd data={offerLd(offer)} />}
-      <PageHead title={title} back={{ href: "/offers", label: "كل العروض" }} />
+      <PageHead section="flights" title={title} back={{ href: "/flights", label: "كل عروض الطيران" }} />
 
       <section className="section container offer-layout">
         <div className="offer-main">

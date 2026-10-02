@@ -10,6 +10,13 @@ const nextConfig = {
   // Images in /public are already resized and compressed.
   images: { unoptimized: true },
   env: { ALLOW_INDEXING: String(ALLOW_INDEXING) },
+  // Flights moved from /offers to /flights; offer links already posted on social media keep working.
+  async redirects() {
+    return [
+      { source: "/offers", destination: "/flights", permanent: true },
+      { source: "/offers/:slug", destination: "/flights/:slug", permanent: true },
+    ];
+  },
   async headers() {
     if (ALLOW_INDEXING) return [];
     return [{ source: "/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] }];

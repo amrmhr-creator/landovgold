@@ -22,7 +22,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   if (!Number.isInteger(id) || id < 1 || !dbConfigured()) notFound();
   const offer = await getOfferById(id);
   if (!offer) notFound();
-  const link = `${SITE.url}/offers/${offer.slug}`;
+  const link = `${SITE.url}/flights/${offer.slug}`;
 
   return (
     <>
@@ -31,7 +31,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       </Link>
       <h1>تعديل عرض</h1>
       <p className="admin-link">
-        <a href={`/offers/${offer.slug}`} target="_blank" dir="ltr">
+        <a href={`/flights/${offer.slug}`} target="_blank" dir="ltr">
           {link}
         </a>{" "}
         <CopyButton text={link} />

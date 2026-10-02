@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
-import { LEAD_KINDS, formatCairoTime, leadKindLabel, whatsappDigits } from "@/lib/admin-format";
+import { formatCairoTime, leadKindLabel, parseLeadSection, whatsappDigits } from "@/lib/admin-format";
 import { dbConfigured, describeError } from "@/lib/db";
+import { LEAD_SECTIONS, LEAD_SECTION_LABEL } from "@/lib/lead-options";
 import { listLeads, type LeadRow } from "@/lib/leads";
 import { formatDate } from "@/lib/offers";
 
 export const metadata = { title: "الطلبات" };
 
-type Search = { kind?: string; marketing?: string };
+type Search = { section?: string; marketing?: string };
 
 function href(s: Search) {
   const q = new URLSearchParams();
-  if (s.kind) q.set("kind", s.kind);
+  if (s.section) q.set("section", s.section);
   if (s.marketing) q.set("marketing", "1");
   const str = q.toString();
   return str ? `?${str}` : "?";
@@ -20,21 +21,21 @@ function href(s: Search) {
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   await requireAdmin();
   const search = await searchParams;
-  const kind = LEAD_KINDS.some((k) => k.key === search.kind) ? search.kind : undefined;
+  const section = parseLeadSection(search.section);
   const marketingOnly = search.marketing === "1";
 
   let leads: LeadRow[] = [];
   let error = false;
   if (dbConfigured()) {
     try {
-      leads = await listLeads({ kind, marketingOnly });
+      leads = await listLeads({ section, marketingOnly });
     } catch (err) {
       console.error(`[admin] pid ${process.pid}: listing leads failed: ${describeError(err)}`);
       error = true;
     }
   }
 
-  const exportQuery = href({ kind, marketing: marketingOnly ? "1" : undefined });
+  const exportQuery = href({ section, marketing: marketingOnly ? "1" : undefined });
 
   return (
     <>
@@ -46,15 +47,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       </div>
 
       <div className="admin-filters">
-        <Link href={href({ marketing: search.marketing })} aria-current={!kind ? "true" : undefined}>
+        <Link href={href({ marketing: search.marketing })} aria-current={!section ? "true" : undefined}>
           الكل
         </Link>
-        {LEAD_KINDS.map((k) => (
-          <Link key={k.key} href={href({ kind: k.key, marketing: search.marketing })} aria-current={kind === k.key ? "true" : undefined}>
-            {k.label}
+        {LEAD_SECTIONS.map((s) => (
+          <Link key={s} href={href({ section: s, marketing: search.marketing })} aria-current={section === s ? "true" : undefined}>
+            {LEAD_SECTION_LABEL[s]}
           </Link>
         ))}
-        <Link href={href({ kind, marketing: marketingOnly ? undefined : "1" })} aria-current={marketingOnly ? "true" : undefined}>
+        <Link href={href({ section, marketing: marketingOnly ? undefined : "1" })} aria-current={marketingOnly ? "true" : undefined}>
           {marketingOnly ? "✓ " : ""}الموافقين على العروض بس
         </Link>
       </div>
@@ -86,10 +87,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </a>
                   </td>
                   <td>
-                    <small className="muted">{leadKindLabel(l.kind)}</small>
+                    <small className="muted">
+                      {LEAD_SECTION_LABEL[l.section]} · {leadKindLabel(l.kind)}
+                    </small>
                     <br />
                     {l.offerSlug && l.kind === "offer" ? (
-                      <a href={`/offers/${l.offerSlug}`} target="_blank">
+                      <a href={`/flights/${l.offerSlug}`} target="_blank">
                         {l.destination}
                       </a>
                     ) : (

@@ -1,13 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
+import FaqList from "@/components/FaqList";
 import JsonLd from "@/components/JsonLd";
 import LeadForm from "@/components/LeadForm";
 import PageHead from "@/components/PageHead";
+import TripTerms from "@/components/TripTerms";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { sectionFaq } from "@/lib/faq";
 import { formatPrice } from "@/lib/offers";
-import { tripLd } from "@/lib/seo";
+import { SECTIONS } from "@/lib/sections";
+import { faqLd, tripLd } from "@/lib/seo";
 import { whatsappLink } from "@/lib/site";
-import { TRAIN_DISCOUNT, TRIPS, TRIP_EXCLUDES, TRIP_INCLUDES } from "@/lib/trips";
+import { TRIPS, tripHref } from "@/lib/trips";
 
 export const metadata = {
   title: "رحلات أسوان والنوبة",
@@ -23,12 +27,16 @@ const GALLERY = [
 ];
 
 export default function Page() {
+  const faq = sectionFaq("aswan");
+
   return (
     <>
       {TRIPS.map((t) => (
         <JsonLd key={t.slug} data={tripLd(t)} />
       ))}
+      <JsonLd data={faqLd(faq)} />
       <PageHead
+        section="aswan"
         title="رحلات أسوان والنوبة"
         lead="أسوان في الشتا حاجة تانية: شمس دافية، ونيل هادي، وناس بتستقبلك كأنك من أهل البيت. برامجنا مترتبة من أول ما توصل لحد ما ترجع، وبتوريك أسوان زي ما أهلها يعرفوها."
       />
@@ -37,41 +45,40 @@ export default function Page() {
         <div className="trips">
           {TRIPS.map((trip) => (
             <article key={trip.slug} id={trip.slug} className="card trip-card">
-              <Image
-                src={trip.image.src}
-                alt={trip.image.alt}
-                width={1400}
-                height={933}
-                sizes="(min-width: 900px) 540px, 100vw"
-                className="trip-image"
-              />
+              <Link href={tripHref(trip)} tabIndex={-1} aria-hidden="true">
+                <Image
+                  src={trip.image.src}
+                  alt=""
+                  width={1400}
+                  height={933}
+                  sizes="(min-width: 900px) 540px, 100vw"
+                  className="trip-image"
+                />
+              </Link>
               <div className="trip-body">
-                <h2>{trip.title}</h2>
+                <h2>
+                  <Link href={tripHref(trip)} className="plain-link">
+                    {trip.title}
+                  </Link>
+                </h2>
                 <p className="muted">{trip.duration}</p>
                 <p>{trip.summary}</p>
                 <p className="trip-price">
                   يبدأ من <strong>{formatPrice(trip.price)}</strong> للفرد بالطيارة
                 </p>
-
-                {trip.itinerary.map((day) => (
-                  <div key={day.title} className="trip-day">
-                    <h3>{day.title}</h3>
-                    <ul>
-                      {day.items.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-
-                <a
-                  className="btn btn-wa btn-block"
-                  href={whatsappLink(`أهلاً، عايز أحجز ${trip.title}. إيه المواعيد المتاحة؟`)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <WhatsAppIcon size={20} /> احجز مكانك على واتساب
-                </a>
+                <div className="actions">
+                  <Link className="btn btn-gold" href={tripHref(trip)}>
+                    البرنامج يوم بيوم
+                  </Link>
+                  <a
+                    className="btn btn-wa"
+                    href={whatsappLink(`أهلاً، عايز أحجز ${trip.title}. إيه المواعيد المتاحة؟`)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <WhatsAppIcon size={20} /> احجز على واتساب
+                  </a>
+                </div>
               </div>
             </article>
           ))}
@@ -79,42 +86,8 @@ export default function Page() {
       </section>
 
       <section className="section section-sand">
-        <div className="container grid-2">
-          <div className="card">
-            <h2>البرنامج يشمل</h2>
-            <ul className="check-list">
-              {TRIP_INCLUDES.map((i) => (
-                <li key={i}>{i}</li>
-              ))}
-            </ul>
-            <h2>البرنامج ما يشملش</h2>
-            <ul className="x-list">
-              {TRIP_EXCLUDES.map((i) => (
-                <li key={i}>{i}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="card">
-            <h2>تختار تسافر إزاي</h2>
-            <ul>
-              <li>
-                <strong>بالطيارة:</strong> أسرع وبتوفّر يوم سفر، والسعر المكتوب فوق بيها.
-              </li>
-              <li>
-                <strong>بالقطر:</strong> أوفر، وبيقل السعر حوالي {formatPrice(TRAIN_DISCOUNT)} للفرد.
-              </li>
-            </ul>
-            <h2>خيارات الدفع</h2>
-            <ul>
-              <li>تدفع المبلغ كامل مقدماً.</li>
-              <li>أو تدفع 50% مقدماً، والـ 50% الباقية أول ما توصل.</li>
-            </ul>
-            <p className="muted small">
-              السعر النهائي بيتحدد حسب اختيارك، وبنأكدهولك على الواتساب قبل الدفع. تقدر تلغي وترجعلك فلوسك
-              كاملة لو قبل الرحلة بـ 15 يوم أو أكتر. <Link href="/cancellation-policy">اقرأ سياسة الإلغاء</Link>
-            </p>
-          </div>
+        <div className="container">
+          <TripTerms />
         </div>
       </section>
 
@@ -147,6 +120,16 @@ export default function Page() {
           <h2 className="section-title">احجز رحلتك</h2>
           <p className="section-sub">سيب بياناتك والبرنامج اللي عايزه، ونرجعلك بالمواعيد والسعر النهائي خلال 24 ساعة.</p>
           <LeadForm kind="trip" />
+        </div>
+      </section>
+
+      <section className="section container prose" id="faq">
+        <h2 className="section-title">أسئلة عن رحلات أسوان والنوبة</h2>
+        <FaqList groups={faq} plain />
+        <div className="center more-link">
+          <a className="btn btn-wa" href={whatsappLink(SECTIONS.aswan.whatsapp)} target="_blank" rel="noopener noreferrer">
+            <WhatsAppIcon size={20} /> اسألنا على واتساب
+          </a>
         </div>
       </section>
     </>

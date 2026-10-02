@@ -5,7 +5,7 @@ import { AUTHOR } from "./blog";
 import type { FaqGroup } from "./faq";
 import { offerTitle, type Offer } from "./offers";
 import { BUSINESS, SITE, SOCIAL } from "./site";
-import type { Trip } from "./trips";
+import { tripHref, type Trip } from "./trips";
 
 const ORG_ID = `${SITE.url}/#organization`;
 
@@ -80,7 +80,7 @@ export function tripLd(t: Trip) {
       "@type": "Offer",
       price: t.price,
       priceCurrency: "EGP",
-      url: `${SITE.url}/aswan-nubia#${t.slug}`,
+      url: `${SITE.url}${tripHref(t)}`,
       availability: "https://schema.org/InStock",
     },
     provider: { "@id": ORG_ID },
@@ -97,7 +97,7 @@ export function offerLd(o: Offer) {
     priceCurrency: "EGP",
     availability: "https://schema.org/InStock",
     validThrough: o.date,
-    url: `${SITE.url}/offers/${o.slug}`,
+    url: `${SITE.url}/flights/${o.slug}`,
     seller: { "@id": ORG_ID },
   };
 }

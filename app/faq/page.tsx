@@ -1,3 +1,4 @@
+import FaqList from "@/components/FaqList";
 import JsonLd from "@/components/JsonLd";
 import PageHead from "@/components/PageHead";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
@@ -16,17 +17,7 @@ export default function Page() {
       <JsonLd data={faqLd(FAQ)} />
       <PageHead title="الأسئلة الشائعة" lead="أسئلة وأجوبة عن الحجز والدفع والرحلات." />
       <section className="section container prose">
-        {FAQ.map((group) => (
-          <div key={group.title} className="faq-group">
-            <h2>{group.title}</h2>
-            {group.items.map((item) => (
-              <details key={item.q} className="faq-item">
-                <summary>{item.q}</summary>
-                <p>{item.a}</p>
-              </details>
-            ))}
-          </div>
-        ))}
+        <FaqList groups={FAQ} />
 
         <div className="center more-link">
           <p className="muted">سؤالك مش موجود؟</p>

@@ -1,7 +1,14 @@
+import FaqList from "@/components/FaqList";
+import JsonLd from "@/components/JsonLd";
 import LeadForm from "@/components/LeadForm";
 import OfferCard from "@/components/OfferCard";
 import PageHead from "@/components/PageHead";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { sectionFaq } from "@/lib/faq";
 import { bookableOffers } from "@/lib/offers-data";
+import { SECTIONS } from "@/lib/sections";
+import { faqLd } from "@/lib/seo";
+import { whatsappLink } from "@/lib/site";
 
 // Offers come from the database, so the page is rendered on each visit.
 export const dynamic = "force-dynamic";
@@ -12,12 +19,15 @@ export const metadata = {
     "عروض تذاكر طيران بأسعار مخفّضة على رحلات محلية ودولية، بتتحدّث باستمرار. ابعت وجهتك ونرجعلك بأكتر من سعر خلال 24 ساعة.",
 };
 
-export default async function OffersPage() {
+export default async function FlightsPage() {
   const offers = await bookableOffers();
+  const faq = sectionFaq("flights");
 
   return (
     <>
+      <JsonLd data={faqLd(faq)} />
       <PageHead
+        section="flights"
         title="عروض الطيران"
         lead="عروض على رحلات محلية ودولية، بتتحدّث باستمرار. الأسعار في الطيران بتتغير كل يوم، فالسعر المكتوب هو آخر سعر وصلنا، وبنأكدهولك قبل الحجز."
       />
@@ -42,6 +52,16 @@ export default async function OffersPage() {
           <h2 className="section-title">مش لاقي وجهتك؟</h2>
           <p className="section-sub">ابعتلنا المكان والميعاد، وإحنا ندوّرلك.</p>
           <LeadForm kind="flight" />
+        </div>
+      </section>
+
+      <section className="section container prose" id="faq">
+        <h2 className="section-title">أسئلة عن تذاكر الطيران</h2>
+        <FaqList groups={faq} plain />
+        <div className="center more-link">
+          <a className="btn btn-wa" href={whatsappLink(SECTIONS.flights.whatsapp)} target="_blank" rel="noopener noreferrer">
+            <WhatsAppIcon size={20} /> اسألنا على واتساب
+          </a>
         </div>
       </section>
     </>

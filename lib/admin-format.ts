@@ -1,5 +1,7 @@
 // Display helpers for the admin panel.
 
+import { LEAD_SECTIONS, type LeadSection } from "./lead-options";
+
 export const LEAD_KINDS = [
   { key: "offer", label: "عرض طيران" },
   { key: "flight", label: "طلب طيران" },
@@ -9,6 +11,11 @@ export const LEAD_KINDS = [
 
 export function leadKindLabel(kind: string | null) {
   return LEAD_KINDS.find((k) => k.key === kind)?.label ?? "طلب";
+}
+
+/** A section filter from the URL, if it's a real one. */
+export function parseLeadSection(value: string | null | undefined): LeadSection | undefined {
+  return LEAD_SECTIONS.find((s) => s === value);
 }
 
 /** Unix seconds → "29/9/2026 3:15 م" in Cairo time. */

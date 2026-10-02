@@ -1,10 +1,14 @@
-// FAQ page content (from CONTENT.md). Also feeds the FAQPage structured data.
+// FAQ content (from CONTENT.md). Also feeds the FAQPage structured data.
+// Groups tied to a section also show on that section's page; the rest are general.
 
-export type FaqGroup = { title: string; items: { q: string; a: string }[] };
+import type { SectionKey } from "./sections";
+
+export type FaqGroup = { title: string; section?: SectionKey; items: { q: string; a: string }[] };
 
 export const FAQ: FaqGroup[] = [
   {
     title: "عن تذاكر الطيران",
+    section: "flights",
     items: [
       {
         q: "ليه السعر اللي على الموقع ممكن يتغير؟",
@@ -30,6 +34,7 @@ export const FAQ: FaqGroup[] = [
   },
   {
     title: "عن رحلات أسوان والنوبة",
+    section: "aswan",
     items: [
       {
         q: "إمتى أحسن وقت أزور أسوان؟",
@@ -75,3 +80,7 @@ export const FAQ: FaqGroup[] = [
     ],
   },
 ];
+
+export function sectionFaq(section: SectionKey) {
+  return FAQ.filter((g) => g.section === section);
+}

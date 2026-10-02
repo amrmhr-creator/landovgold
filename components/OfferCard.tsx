@@ -23,7 +23,7 @@ export default function OfferCard({ offer }: { offer: Offer }) {
           </dd>
         </div>
       </dl>
-      <Link className="btn btn-gold btn-block" href={`/offers/${offer.slug}`}>
+      <Link className="btn btn-gold btn-block" href={`/flights/${offer.slug}`}>
         تفاصيل العرض
       </Link>
     </article>

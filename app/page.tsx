@@ -1,9 +1,13 @@
+import Image from "next/image";
 import Link from "next/link";
 import NubianStrip from "@/components/NubianStrip";
 import OfferCard from "@/components/OfferCard";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { formatPrice } from "@/lib/offers";
 import { bookableOffers } from "@/lib/offers-data";
+import { SECTIONS, SECTION_LIST } from "@/lib/sections";
 import { SITE, whatsappLink } from "@/lib/site";
+import { TRIPS, tripHref } from "@/lib/trips";
 
 // Offers come from the database, so the page is rendered on each visit.
 export const dynamic = "force-dynamic";
@@ -23,6 +27,7 @@ const WHY = [
 
 export default async function HomePage() {
   const latestOffers = (await bookableOffers()).slice(0, 3);
+  const { flights, aswan } = SECTIONS;
 
   return (
     <>
@@ -30,40 +35,73 @@ export default async function HomePage() {
         <div className="container hero-inner">
           <h1>{SITE.name}</h1>
           <p className="hero-lead">{SITE.tagline}.</p>
-          <div className="actions">
-            <a className="btn btn-wa" href={whatsappLink()} target="_blank" rel="noopener noreferrer">
-              <WhatsAppIcon size={20} /> كلّمنا على واتساب
-            </a>
-            <Link className="btn btn-gold" href="/offers">
-              شوف العروض
-            </Link>
-          </div>
         </div>
       </section>
 
-      <NubianStrip />
+      {/* One door per section: the visitor picks what they came for. */}
+      <section className="container doors" aria-label="خدماتنا">
+        {SECTION_LIST.map((s) => (
+          <article key={s.key} className="card door">
+            <span className="service-icon" aria-hidden="true">{s.icon}</span>
+            <h2>{s.title}</h2>
+            <p>{s.pitch}</p>
+            <div className="actions">
+              <Link className="btn btn-gold" href={s.cta.href}>
+                {s.cta.label}
+              </Link>
+              <a className="btn btn-outline" href={whatsappLink(s.whatsapp)} target="_blank" rel="noopener noreferrer">
+                <WhatsAppIcon size={18} /> اسأل على واتساب
+              </a>
+            </div>
+          </article>
+        ))}
+      </section>
 
       <section className="section container">
-        <h2 className="section-title">خدماتنا</h2>
+        <div className="center">
+          <span className="eyebrow">
+            <span aria-hidden="true">{flights.icon}</span> {flights.name}
+          </span>
+        </div>
+        <h2 className="section-title">أحدث عروض الطيران</h2>
+        {latestOffers.length > 0 ? (
+          <div className="grid-3">
+            {latestOffers.map((o) => (
+              <OfferCard key={o.slug} offer={o} />
+            ))}
+          </div>
+        ) : (
+          <p className="section-sub">مفيش عروض متاحة دلوقتي، كلّمنا ونجيبلك أحسن سعر.</p>
+        )}
+        <div className="center more-link">
+          <Link className="btn btn-outline" href={flights.href}>كل عروض الطيران</Link>
+        </div>
+      </section>
+
+      <NubianStrip className="strip-short" />
+
+      <section className="section container">
+        <div className="center">
+          <span className="eyebrow">
+            <span aria-hidden="true">{aswan.icon}</span> {aswan.name}
+          </span>
+        </div>
+        <h2 className="section-title">برامج أسوان والنوبة</h2>
         <div className="grid-2">
-          <article className="card service-card">
-            <span className="service-icon" aria-hidden="true">✈</span>
-            <h3>تذاكر طيران بأسعار مخفّضة</h3>
-            <p>
-              محلي ودولي. بندوّرلك على أكتر من سعر وأكتر من شركة، ونعرضهم عليك وإنت تختار اللي يناسبك في السعر
-              والمواعيد.
-            </p>
-            <Link href="/offers" className="text-link">شوف عروض الطيران ←</Link>
-          </article>
-          <article className="card service-card">
-            <span className="service-icon" aria-hidden="true">☀</span>
-            <h3>رحلات أسوان والنوبة</h3>
-            <p>
-              برامج جاهزة في موسم الشتا، من المركب في النيل لحد البيوت النوبية الملوّنة. كل حاجة مترتبة، وإنت
-              عليك تستمتع بس.
-            </p>
-            <Link href="/aswan-nubia" className="text-link">شوف الرحلات ←</Link>
-          </article>
+          {TRIPS.map((t) => (
+            <Link key={t.slug} href={tripHref(t)} className="card mini-trip">
+              <Image src={t.image.src} alt="" width={1400} height={933} sizes="(min-width: 720px) 45vw, 100vw" />
+              <div>
+                <h3>{t.title}</h3>
+                <p className="muted">
+                  {t.duration} · يبدأ من {formatPrice(t.price)} للفرد
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+        <div className="center more-link">
+          <Link className="btn btn-outline" href={aswan.href}>كل تفاصيل الرحلات</Link>
         </div>
       </section>
 
@@ -94,24 +132,6 @@ export default async function HomePage() {
               <p>{w.text}</p>
             </div>
           ))}
-        </div>
-      </section>
-
-      <NubianStrip className="strip-short" />
-
-      <section className="section container">
-        <h2 className="section-title">أحدث العروض</h2>
-        {latestOffers.length > 0 ? (
-          <div className="grid-3">
-            {latestOffers.map((o) => (
-              <OfferCard key={o.slug} offer={o} />
-            ))}
-          </div>
-        ) : (
-          <p className="section-sub">مفيش عروض متاحة دلوقتي، كلّمنا ونجيبلك أحسن سعر.</p>
-        )}
-        <div className="center more-link">
-          <Link className="btn btn-outline" href="/offers">كل العروض</Link>
         </div>
       </section>
 

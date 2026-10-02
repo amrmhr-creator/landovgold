@@ -32,7 +32,7 @@ function formatDay(iso: string) {
 }
 
 const CTA = {
-  flights: { text: "عايز أحسن سعر لتذكرتك؟", button: "ابعتلنا وجهتك", href: "/offers#request" },
+  flights: { text: "عايز أحسن سعر لتذكرتك؟", button: "ابعتلنا وجهتك", href: "/flights#request" },
   aswan: { text: "عايز تشوف أسوان والنوبة بنفسك؟", button: "شوف برامج الرحلات", href: "/aswan-nubia" },
 };
 

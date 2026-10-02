@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { LEGAL, NAV, SITE, SOCIAL, whatsappLink } from "@/lib/site";
+import { SECTION_LIST } from "@/lib/sections";
+import { COMPANY_NAV, CONTACT_NAV, LEGAL, SITE, SOCIAL, whatsappLink } from "@/lib/site";
 import NubianStrip from "./NubianStrip";
 
 export default function Footer() {
@@ -14,9 +15,20 @@ export default function Footer() {
         </div>
 
         <div>
-          <h2>الصفحات</h2>
+          <h2>خدماتنا</h2>
           <ul>
-            {NAV.map((item) => (
+            {SECTION_LIST.map((s) => (
+              <li key={s.key}>
+                <Link href={s.href}>{s.name}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <h2>عن بلاد الدهب</h2>
+          <ul>
+            {[...COMPANY_NAV, CONTACT_NAV].map((item) => (
               <li key={item.href}>
                 <Link href={item.href}>{item.label}</Link>
               </li>

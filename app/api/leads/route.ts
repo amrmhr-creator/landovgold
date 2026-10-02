@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { describeError } from "@/lib/db";
-import { SERVICES, TRANSPORT } from "@/lib/lead-options";
+import { SERVICES, SERVICE_SECTION, TRANSPORT } from "@/lib/lead-options";
 import { submitLead, type Lead } from "@/lib/leads";
 import { offerTitle } from "@/lib/offers";
 import { getOffer } from "@/lib/offers-data";
@@ -74,30 +74,30 @@ async function parseRequest(body: Record<string, unknown>): Promise<Omit<Lead, "
     } catch (err) {
       // The database is down, but the email can still carry the lead.
       console.error(`[leads] pid ${process.pid}: offer lookup failed: ${describeError(err)}`);
-      return { kind, destination: `عرض ${slug}`, travelDate: null, travelers: null, details: null, offerSlug: slug };
+      return { kind, section: "flights", destination: `عرض ${slug}`, travelDate: null, travelers: null, details: null, offerSlug: slug };
     }
     if (!offer) throw new InvalidLead("العرض ده مش موجود.");
-    return { kind, destination: offerTitle(offer), travelDate: offer.date, travelers: null, details: null, offerSlug: offer.slug };
+    return { kind, section: "flights", destination: offerTitle(offer), travelDate: offer.date, travelers: null, details: null, offerSlug: offer.slug };
   }
   if (kind === "flight") {
     const from = clean(body.from, 100);
     const to = clean(body.to, 100);
     if (!from || !to) throw new InvalidLead("اختار مسافر منين ورايح فين.");
     if (from === to) throw new InvalidLead("مطار السفر ومطار الوصول لازم يكونوا مختلفين.");
-    return { kind, destination: `${from} ← ${to}`, travelDate: needDate(), travelers: needTravelers(), details: null, offerSlug: null };
+    return { kind, section: "flights", destination: `${from} ← ${to}`, travelDate: needDate(), travelers: needTravelers(), details: null, offerSlug: null };
   }
   if (kind === "trip") {
     const trip = getTrip(clean(body.trip, 120));
     const transport = oneOf(TRANSPORT, clean(body.transport, 20));
     if (!trip || !transport) throw new InvalidLead("اختار البرنامج وطريقة السفر.");
-    return { kind, destination: `${trip.title} (${transport})`, travelDate: needDate(), travelers: needTravelers(), details: null, offerSlug: trip.slug };
+    return { kind, section: "aswan", destination: `${trip.title} (${transport})`, travelDate: needDate(), travelers: needTravelers(), details: null, offerSlug: trip.slug };
   }
   if (kind === "contact") {
     const service = oneOf(SERVICES, clean(body.service, 40));
     const details = clean(body.details, 1000);
     if (!service) throw new InvalidLead("اختار الخدمة.");
     if (details.length < 3) throw new InvalidLead("اكتب تفاصيل طلبك.");
-    return { kind, destination: service, travelDate: null, travelers: null, details, offerSlug: null };
+    return { kind, section: SERVICE_SECTION[service], destination: service, travelDate: null, travelers: null, details, offerSlug: null };
   }
   throw new InvalidLead("طلب غير صالح");
 }

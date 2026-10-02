@@ -2,7 +2,7 @@
 import { ARTICLES } from "@/lib/blog";
 import { formatPrice } from "@/lib/offers";
 import { SITE } from "@/lib/site";
-import { TRAIN_DISCOUNT, TRIPS } from "@/lib/trips";
+import { TRAIN_DISCOUNT, TRIPS, tripHref } from "@/lib/trips";
 
 export const dynamic = "force-static";
 
@@ -19,8 +19,8 @@ export function GET() {
 
 ## الصفحات الأساسية
 
-- [عروض الطيران](${u("/offers")}): أحدث عروض التذاكر، وفورم لطلب سعر لأي وجهة
-- [رحلات أسوان والنوبة](${u("/aswan-nubia")}): البرامج يوم بيوم والأسعار
+- [عروض الطيران](${u("/flights")}): أحدث عروض التذاكر، وفورم لطلب سعر لأي وجهة، وأسئلة الطيران
+- [رحلات أسوان والنوبة](${u("/aswan-nubia")}): البرامج والأسعار وطرق الدفع، وأسئلة الرحلات
 - [إزاي بنشتغل](${u("/how-we-work")}): خطوات الحجز وطرق الدفع للمصريين في مصر وبرّه
 - [الأسئلة الشائعة](${u("/faq")})
 - [مين احنا](${u("/about")})
@@ -29,7 +29,7 @@ export function GET() {
 
 ## برامج أسوان والنوبة
 
-${TRIPS.map((t) => `- [${t.title}](${u(`/aswan-nubia#${t.slug}`)}): ${t.duration}، يبدأ من ${formatPrice(t.price)} للفرد بالطيارة (بالقطر أقل بحوالي ${formatPrice(TRAIN_DISCOUNT)}). ${t.summary}`).join("\n")}
+${TRIPS.map((t) => `- [${t.title}](${u(tripHref(t))}): ${t.duration}، يبدأ من ${formatPrice(t.price)} للفرد بالطيارة (بالقطر أقل بحوالي ${formatPrice(TRAIN_DISCOUNT)}). ${t.summary}`).join("\n")}
 
 ## المدوّنة
 
