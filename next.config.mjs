@@ -18,8 +18,28 @@ const nextConfig = {
     ];
   },
   async headers() {
-    if (ALLOW_INDEXING) return [];
-    return [{ source: "/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] }];
+    // Basic browser protections on every page.
+    const security = [
+      // Always HTTPS for a year (subdomains left out, in case one of them has no certificate).
+      { key: "Strict-Transport-Security", value: "max-age=31536000" },
+      // No other site can show ours inside a frame (stops click-tricks on the admin panel).
+      { key: "X-Frame-Options", value: "DENY" },
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), usb=()" },
+    ];
+    const robots = ALLOW_INDEXING ? [] : [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
+    return [
+      { source: "/:path*", headers: [...security, ...robots] },
+      // The admin panel is never stored by the browser or a proxy, and never indexed.
+      {
+        source: "/admin/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store" },
+          ...(ALLOW_INDEXING ? [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] : []),
+        ],
+      },
+    ];
   },
 };
 
