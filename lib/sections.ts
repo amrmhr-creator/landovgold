@@ -10,11 +10,8 @@ export type Section = {
   name: string;
   href: string;
   icon: string;
-  /** Title and text of the section's door on the home page. */
+  /** Heading of the section's block on the home page. */
   title: string;
-  pitch: string;
-  /** Where the section's main call to action goes, and what it says. */
-  cta: { href: string; label: string };
   /** Sub-menu shown at the top of the section's pages. */
   links: { href: string; label: string }[];
   /** Opening line of a WhatsApp chat started from this section. */
@@ -27,9 +24,7 @@ export const SECTIONS: Record<SectionKey, Section> = {
     name: "طيران",
     href: "/flights",
     icon: "✈",
-    title: "تذاكر طيران بأسعار مخفّضة",
-    pitch: "محلي ودولي. بندوّرلك على أكتر من سعر وأكتر من شركة، ونعرضهم عليك وإنت تختار اللي يناسبك في السعر والمواعيد.",
-    cta: { href: "/flights", label: "شوف عروض الطيران" },
+    title: "أحدث عروض الطيران",
     links: [
       { href: "/flights", label: "العروض" },
       { href: "/flights#request", label: "اطلب سعر لوجهتك" },
@@ -39,12 +34,11 @@ export const SECTIONS: Record<SectionKey, Section> = {
   },
   aswan: {
     key: "aswan",
-    name: "أسوان والنوبة",
+    // The trips section is general; Aswan & Nubia is its first destination, more can follow.
+    name: "رحلات",
     href: "/aswan-nubia",
     icon: "☀",
-    title: "رحلات أسوان والنوبة",
-    pitch: "برامج جاهزة في موسم الشتا، من المركب في النيل لحد البيوت النوبية الملوّنة. كل حاجة مترتبة، وإنت عليك تستمتع بس.",
-    cta: { href: "/aswan-nubia", label: "شوف برامج الرحلات" },
+    title: "عروض الرحلات",
     links: [
       { href: "/aswan-nubia", label: "البرامج" },
       { href: "/aswan-nubia#book", label: "احجز رحلتك" },

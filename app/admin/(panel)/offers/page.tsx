@@ -2,7 +2,7 @@ import Link from "next/link";
 import CopyButton from "@/components/CopyButton";
 import { requireAdmin } from "@/lib/admin-auth";
 import { dbConfigured, describeError } from "@/lib/db";
-import { cairoToday, formatDate, formatPrice, offerTitle, type Offer } from "@/lib/offers";
+import { cairoToday, formatDate, offerPrice, offerTitle, type Offer } from "@/lib/offers";
 import { allOffers } from "@/lib/offers-data";
 import { SITE } from "@/lib/site";
 import { toggleOfferAction } from "../../actions";
@@ -86,7 +86,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ s
                       </small>
                     </td>
                     <td className="nowrap">{formatDate(o.date)}</td>
-                    <td className="nowrap">{formatPrice(o.price)}</td>
+                    <td className="nowrap">{offerPrice(o)}</td>
                     <td>
                       <span className={`admin-status ${s.className}`}>{s.label}</span>
                     </td>

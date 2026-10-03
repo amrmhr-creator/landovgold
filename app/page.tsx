@@ -1,11 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
+import LeadForm from "@/components/LeadForm";
 import NubianStrip from "@/components/NubianStrip";
 import OfferCard from "@/components/OfferCard";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { formatPrice } from "@/lib/offers";
 import { bookableOffers } from "@/lib/offers-data";
-import { SECTIONS, SECTION_LIST } from "@/lib/sections";
+import { SECTIONS } from "@/lib/sections";
 import { SITE, whatsappLink } from "@/lib/site";
 import { TRIPS, tripHref } from "@/lib/trips";
 
@@ -14,8 +15,8 @@ export const dynamic = "force-dynamic";
 
 const STEPS = [
   { title: "ابعتلنا طلبك", text: "على واتساب أو من الفورم: رايح فين، وإمتى، وكام فرد." },
-  { title: "نرجعلك بأكتر من سعر", text: "خلال 24 ساعة، وتختار اللي يريحك." },
-  { title: "تدفع وتستلم", text: "تذكرتك أو تأكيد رحلتك، بالطريقة اللي تناسبك." },
+  { title: "نرجعلك بأكتر من اختيار", text: "خلال 24 ساعة، بأسعارها وتفاصيلها." },
+  { title: "تختار اللي يناسبك، واحنا نكمّل", text: "نخلّص الحجز ونبعتلك التأكيد على الواتساب." },
 ];
 
 const WHY = [
@@ -31,30 +32,17 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* Flights come first: the headline, then the price request right under it. */}
       <section className="hero">
         <div className="container hero-inner">
-          <h1>{SITE.name}</h1>
-          <p className="hero-lead">{SITE.tagline}.</p>
+          <p className="hero-brand">{SITE.name}</p>
+          <h1>تذاكر طيران بأسعار تناسبك</h1>
+          <p className="hero-lead">محلي ودولي. بندوّرلك على أكتر من سعر وأكتر من شركة، وإنت تختار.</p>
         </div>
       </section>
 
-      {/* One door per section: the visitor picks what they came for. */}
-      <section className="container doors" aria-label="خدماتنا">
-        {SECTION_LIST.map((s) => (
-          <article key={s.key} className="card door">
-            <span className="service-icon" aria-hidden="true">{s.icon}</span>
-            <h2>{s.title}</h2>
-            <p>{s.pitch}</p>
-            <div className="actions">
-              <Link className="btn btn-gold" href={s.cta.href}>
-                {s.cta.label}
-              </Link>
-              <a className="btn btn-outline" href={whatsappLink(s.whatsapp)} target="_blank" rel="noopener noreferrer">
-                <WhatsAppIcon size={18} /> اسأل على واتساب
-              </a>
-            </div>
-          </article>
-        ))}
+      <section className="container hero-form" aria-label="اطلب سعر تذكرتك">
+        <LeadForm kind="flight" quick title="قولّنا رايح فين، ونرجعلك بالأسعار" />
       </section>
 
       <section className="section container">
@@ -63,7 +51,7 @@ export default async function HomePage() {
             <span aria-hidden="true">{flights.icon}</span> {flights.name}
           </span>
         </div>
-        <h2 className="section-title">أحدث عروض الطيران</h2>
+        <h2 className="section-title">{flights.title}</h2>
         {latestOffers.length > 0 ? (
           <div className="grid-3">
             {latestOffers.map((o) => (
@@ -86,7 +74,8 @@ export default async function HomePage() {
             <span aria-hidden="true">{aswan.icon}</span> {aswan.name}
           </span>
         </div>
-        <h2 className="section-title">برامج أسوان والنوبة</h2>
+        <h2 className="section-title">{aswan.title}</h2>
+        <p className="section-sub">أسوان والنوبة: برامج جاهزة في موسم الشتا، وكل حاجة مترتبة.</p>
         <div className="grid-2">
           {TRIPS.map((t) => (
             <Link key={t.slug} href={tripHref(t)} className="card mini-trip">

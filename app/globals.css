@@ -368,38 +368,25 @@ img {
   margin: 0 0 32px;
 }
 
-/* ---------- Home: one door per section, overlapping the hero ---------- */
-.hero:has(+ .doors) .hero-inner {
+/* ---------- Home: the flight request form, overlapping the hero ---------- */
+.hero-brand {
+  margin: 0 0 4px;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.hero:has(+ .hero-form) h1 {
+  font-size: clamp(34px, 6vw, 60px);
+}
+
+.hero:has(+ .hero-form) .hero-inner {
   padding-bottom: 120px;
 }
 
-.doors {
+.hero-form {
   position: relative;
-  display: grid;
-  gap: 24px;
-  margin-top: -72px;
-}
-
-@media (min-width: 720px) {
-  .doors {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  }
-}
-
-.door {
-  display: flex;
-  flex-direction: column;
-  border-top: 4px solid var(--gold);
-}
-
-.door h2 {
-  margin: 0 0 8px;
-  font-size: 24px;
-}
-
-.door p {
-  flex: 1;
-  margin: 0 0 20px;
+  max-width: 760px;
+  margin-top: -88px;
 }
 
 .mini-trip {

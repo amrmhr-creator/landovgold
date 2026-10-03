@@ -45,7 +45,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           to: asLabel(offer.to),
           date: offer.date,
           tripType: offer.tripType,
-          price: String(offer.price),
+          price: offer.price > 0 ? String(offer.price) : "",
           airline: offer.airline,
           transit: offer.transit,
           baggage: offer.baggage,

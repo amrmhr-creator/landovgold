@@ -7,7 +7,7 @@ export type Offer = {
   slug: string;
   from: string;
   to: string;
-  price: number; // starting price per person, in EGP
+  price: number; // starting price per person, in EGP; 0 = no price yet ("اسأل عن سعر النهارده")
   tripType: "ذهاب فقط" | "ذهاب وعودة";
   date: string; // ISO date of travel, e.g. "2026-11-15"
   airline: string;
@@ -15,49 +15,48 @@ export type Offer = {
   baggage: string; // e.g. "شنطة 23 كيلو"
   extras?: string[]; // anything else worth saying
   available: boolean;
-  sample?: boolean; // placeholder offer, shown with an "مثال" badge
 };
 
-/** Shown only when no database is configured (local development). */
+/**
+ * Starter offers with no price yet. Shown when no database is configured (local development),
+ * and added once to an empty offers table so they can be edited or hidden from the admin panel.
+ */
 export const SAMPLE_OFFERS: Offer[] = [
   {
     slug: "cairo-riyadh",
     from: "القاهرة",
     to: "الرياض",
-    price: 9500,
+    price: 0,
     tripType: "ذهاب فقط",
     date: "2026-11-12",
     airline: "مصر للطيران",
     transit: "طيران مباشر",
     baggage: "شنطة 23 كيلو",
     available: true,
-    sample: true,
   },
   {
     slug: "cairo-dubai",
     from: "القاهرة",
     to: "دبي",
-    price: 11200,
+    price: 0,
     tripType: "ذهاب وعودة",
     date: "2026-11-20",
     airline: "طيران الإمارات",
     transit: "طيران مباشر",
     baggage: "شنطة 30 كيلو",
     available: true,
-    sample: true,
   },
   {
     slug: "cairo-aswan",
     from: "القاهرة",
     to: "أسوان",
-    price: 3400,
+    price: 0,
     tripType: "ذهاب وعودة",
     date: "2026-12-05",
     airline: "مصر للطيران",
     transit: "طيران مباشر",
     baggage: "شنطة 20 كيلو",
     available: true,
-    sample: true,
   },
 ];
 
@@ -67,6 +66,13 @@ export function offerTitle(o: Offer) {
 
 export function formatPrice(price: number) {
   return `${price.toLocaleString("ar-EG")} ج.م`;
+}
+
+export const ASK_PRICE = "اسأل عن سعر النهارده";
+
+/** The offer's price, or the "ask us" line when it has none. */
+export function offerPrice(o: Offer) {
+  return o.price > 0 ? formatPrice(o.price) : ASK_PRICE;
 }
 
 export function formatDate(iso: string) {

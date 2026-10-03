@@ -3,7 +3,8 @@ import { dbConfigured, describeError, query } from "./db";
 import { SAMPLE_OFFERS, isBookable, type Offer } from "./offers";
 
 // Offers in MySQL, managed from /admin/offers. Without a database (local development)
-// the site shows SAMPLE_OFFERS instead.
+// the site shows SAMPLE_OFFERS instead. An empty table gets SAMPLE_OFFERS once, so the
+// owner starts with offers he can edit or hide (there's no delete, so they never come back).
 
 let tableReady = false;
 
@@ -27,6 +28,17 @@ async function ensureOffersTable() {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
+  const [{ n }] = await query<{ n: number }[]>("SELECT COUNT(*) AS n FROM offers");
+  if (Number(n) === 0) {
+    // INSERT IGNORE: several app processes may get here at once; the unique slug keeps one copy.
+    for (const o of SAMPLE_OFFERS) {
+      await query(
+        `INSERT IGNORE INTO offers (slug, from_city, to_city, price, trip_type, travel_date, airline, transit, baggage, extras, available)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [o.slug, ...columns(o)],
+      );
+    }
+  }
   tableReady = true;
 }
 
@@ -85,7 +97,7 @@ export async function getOfferById(id: number) {
   return rows[0] ? toOffer(rows[0]) : undefined;
 }
 
-export type OfferInput = Omit<Offer, "id" | "slug" | "sample">;
+export type OfferInput = Omit<Offer, "id" | "slug">;
 
 function columns(o: OfferInput) {
   return [o.from, o.to, o.price, o.tripType, o.date, o.airline, o.transit, o.baggage, (o.extras ?? []).join("\n"), o.available ? 1 : 0];

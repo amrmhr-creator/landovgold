@@ -5,7 +5,7 @@ import JsonLd from "@/components/JsonLd";
 import LeadForm from "@/components/LeadForm";
 import PageHead from "@/components/PageHead";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
-import { formatDate, formatPrice, isBookable, offerTitle } from "@/lib/offers";
+import { ASK_PRICE, formatDate, formatPrice, isBookable, offerTitle } from "@/lib/offers";
 import { getOffer } from "@/lib/offers-data";
 import { offerLd } from "@/lib/seo";
 import { whatsappLink } from "@/lib/site";
@@ -18,7 +18,8 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const offer = await getOffer(decodeURIComponent((await params).slug));
   if (!offer) return {};
-  const title = `عرض طيران ${offerTitle(offer)} يبدأ من ${formatPrice(offer.price)}`;
+  const title =
+    offer.price > 0 ? `عرض طيران ${offerTitle(offer)} يبدأ من ${formatPrice(offer.price)}` : `عرض طيران ${offerTitle(offer)}`;
   const description = `${offer.tripType} على ${offer.airline}، ${formatDate(offer.date)}. ${offer.transit}، ${offer.baggage}. احجز على واتساب أو سيب بياناتك.`;
   return { title, description, openGraph: { title, description } };
 }
@@ -42,21 +43,27 @@ export default async function OfferPage({ params }: Params) {
 
   return (
     <>
-      {/* Sample offers aren't real, so they don't get offer markup. */}
-      {!offer.sample && bookable && <JsonLd data={offerLd(offer)} />}
+      {/* Offer markup needs a price, so offers without one don't get it. */}
+      {offer.price > 0 && bookable && <JsonLd data={offerLd(offer)} />}
       <PageHead section="flights" title={title} back={{ href: "/flights", label: "كل عروض الطيران" }} />
 
       <section className="section container offer-layout">
         <div className="offer-main">
-          {offer.sample && <p className="badge badge-inline">مثال — مش عرض حقيقي</p>}
           {!bookable && <p className="notice">العرض ده انتهى. كلّمنا ونجيبلك أقرب سعر ليه.</p>}
           <dl className="offer-facts">
-            <div>
-              <dt>السعر يبدأ من</dt>
-              <dd className="price">
-                {formatPrice(offer.price)} <small>للفرد، {offer.tripType}</small>
-              </dd>
-            </div>
+            {offer.price > 0 ? (
+              <div>
+                <dt>السعر يبدأ من</dt>
+                <dd className="price">
+                  {formatPrice(offer.price)} <small>للفرد، {offer.tripType}</small>
+                </dd>
+              </div>
+            ) : (
+              <div>
+                <dt>السعر</dt>
+                <dd className="price">{ASK_PRICE}</dd>
+              </div>
+            )}
             {facts.map(([k, v]) => (
               <div key={k}>
                 <dt>{k}</dt>
@@ -65,7 +72,9 @@ export default async function OfferPage({ params }: Params) {
             ))}
           </dl>
           <p className="muted small">
-            السعر حسب آخر تحديث، وممكن يتغير حسب المقاعد المتاحة. ابعتلنا ونأكدهولك.
+            {offer.price > 0
+              ? "السعر حسب آخر تحديث، وممكن يتغير حسب المقاعد المتاحة. ابعتلنا ونأكدهولك."
+              : "أسعار الطيران بتتغير كل يوم، فابعتلنا ونقولّك سعر النهارده."}
           </p>
           {offer.extras && offer.extras.length > 0 && (
             <ul className="offer-details">

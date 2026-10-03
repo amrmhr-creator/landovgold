@@ -1,7 +1,7 @@
 export const SITE = {
   name: "بلاد الدهب",
   url: "https://landovgold.com",
-  tagline: "تذاكر طيران بأسعار مخفّضة، ورحلات أسوان والنوبة بروح الجنوب",
+  tagline: "تذاكر طيران بأسعار تناسبك، ورحلات أسوان والنوبة بروح الجنوب",
   email: "book@landovgold.com",
   whatsappNumber: "201023643424",
   whatsappDisplay: "01023643424",

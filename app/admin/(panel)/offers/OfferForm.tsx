@@ -38,8 +38,8 @@ export default function OfferForm({ initial }: { initial: Record<string, string>
       </div>
       <div className="lead-row">
         <label>
-          السعر يبدأ من (جنيه للفرد)
-          <input name="price" type="number" required min={1} step={1} inputMode="numeric" defaultValue={v.price} />
+          السعر يبدأ من (جنيه للفرد، فاضي = &quot;اسأل عن سعر النهارده&quot;)
+          <input name="price" type="number" min={0} step={1} inputMode="numeric" defaultValue={v.price} />
         </label>
         <label>
           شركة الطيران

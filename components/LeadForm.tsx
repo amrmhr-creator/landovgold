@@ -28,6 +28,11 @@ type Props = {
   trip?: string;
   title?: string;
   submitLabel?: string;
+  /**
+   * Kind "flight" only: start with from, to and date; the rest of the form opens
+   * after the first click (home page), so the first step looks short.
+   */
+  quick?: boolean;
 };
 
 function localToday() {
@@ -51,7 +56,7 @@ function describeRequest(kind: LeadKind, data: Record<string, string>, offerLabe
   }
 }
 
-export default function LeadForm({ kind, offer, offerLabel, trip, title, submitLabel = "ابعت الطلب" }: Props) {
+export default function LeadForm({ kind, offer, offerLabel, trip, title, submitLabel = "ابعت الطلب", quick = false }: Props) {
   const pathname = usePathname();
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [error, setError] = useState("");
@@ -59,9 +64,15 @@ export default function LeadForm({ kind, offer, offerLabel, trip, title, submitL
   // Set after mount so the server-rendered HTML doesn't depend on the server's date.
   const [minDate, setMinDate] = useState<string>();
   useEffect(() => setMinDate(localToday()), []);
+  const [expanded, setExpanded] = useState(!quick);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!expanded) {
+      // First step done (the browser already checked from, to and date): open the rest.
+      setExpanded(true);
+      return;
+    }
     setStatus("sending");
     setError("");
     const data = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
@@ -122,17 +133,55 @@ export default function LeadForm({ kind, offer, offerLabel, trip, title, submitL
     </label>
   );
 
-  return (
-    <form className="lead-form" onSubmit={onSubmit}>
-      {title && <h3>{title}</h3>}
+  const contactInputs = (
+    <>
       <label>
         الاسم
-        <input name="name" required minLength={2} maxLength={120} autoComplete="name" />
+        <input name="name" required minLength={2} maxLength={120} autoComplete="name" autoFocus={quick} />
       </label>
       <label>
         رقم الموبايل أو الواتساب
         <input name="phone" type="tel" required inputMode="tel" dir="ltr" maxLength={40} autoComplete="tel" placeholder="01xxxxxxxxx" />
       </label>
+    </>
+  );
+
+  if (kind === "flight" && quick) {
+    return (
+      <form className="lead-form" onSubmit={onSubmit}>
+        {title && <h3>{title}</h3>}
+        <div className="lead-row">
+          <AirportInput name="from" label="مسافر منين؟" placeholder="اكتب المدينة أو المطار" />
+          <AirportInput name="to" label="رايح فين؟" placeholder="اكتب المدينة أو المطار" />
+        </div>
+        {dateInput("تاريخ السفر التقريبي")}
+        {expanded && (
+          <>
+            {travelersInput}
+            {contactInputs}
+            <label className="check">
+              <input type="checkbox" name="marketing" value="yes" />
+              ابعتولي عروض جديدة على واتساب
+            </label>
+          </>
+        )}
+        <input name="website" tabIndex={-1} autoComplete="off" className="hp" aria-hidden="true" />
+        {status === "error" && (
+          <p className="form-error" role="alert">
+            {error}
+          </p>
+        )}
+        <button className="btn btn-gold btn-block" type="submit" disabled={status === "sending"}>
+          {!expanded ? "اطلب السعر" : status === "sending" ? "بيتبعت..." : submitLabel}
+        </button>
+      </form>
+    );
+  }
+
+  return (
+    <form className="lead-form" onSubmit={onSubmit}>
+      {title && <h3>{title}</h3>}
+      {contactInputs}
 
       {kind === "flight" && (
         <>

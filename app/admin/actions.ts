@@ -47,12 +47,13 @@ export async function saveOfferAction(prev: OfferFormState, formData: FormData):
   const from = text(formData, "from", 100);
   const to = text(formData, "to", 100);
   const date = text(formData, "date", 10);
+  // Empty price = 0, shown on the site as "اسأل عن سعر النهارده".
   const price = Number(text(formData, "price", 9).replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))));
   const tripType = text(formData, "tripType", 20);
 
   if (!from || !to) return fail("اكتب مسافر منين ورايح فين.");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return fail("اختار تاريخ السفر.");
-  if (!Number.isInteger(price) || price <= 0) return fail("اكتب السعر بالجنيه، رقم صحيح.");
+  if (!Number.isInteger(price) || price < 0) return fail("اكتب السعر بالجنيه، رقم صحيح، أو سيبه فاضي.");
   if (tripType !== "ذهاب فقط" && tripType !== "ذهاب وعودة") return fail("اختار ذهاب فقط أو ذهاب وعودة.");
 
   const offer: OfferInput = {
