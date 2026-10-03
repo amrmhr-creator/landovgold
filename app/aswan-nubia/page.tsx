@@ -11,7 +11,7 @@ import { formatPrice } from "@/lib/offers";
 import { SECTIONS } from "@/lib/sections";
 import { faqLd, tripLd } from "@/lib/seo";
 import { whatsappLink } from "@/lib/site";
-import { TRIPS, tripHref } from "@/lib/trips";
+import { ASK_TRIP_PRICE, TRIPS, tripHref } from "@/lib/trips";
 
 export const metadata = {
   title: "رحلات أسوان والنوبة",
@@ -64,7 +64,13 @@ export default function Page() {
                 <p className="muted">{trip.duration}</p>
                 <p>{trip.summary}</p>
                 <p className="trip-price">
-                  يبدأ من <strong>{formatPrice(trip.price)}</strong> للفرد بالطيارة
+                  {trip.price > 0 ? (
+                    <>
+                      يبدأ من <strong>{formatPrice(trip.price)}</strong> للفرد بالطيارة
+                    </>
+                  ) : (
+                    <strong>{ASK_TRIP_PRICE}</strong>
+                  )}
                 </p>
                 <div className="actions">
                   <Link className="btn btn-gold" href={tripHref(trip)}>

@@ -76,13 +76,16 @@ export function tripLd(t: Trip) {
         description: day.items.join(" "),
       })),
     },
-    offers: {
-      "@type": "Offer",
-      price: t.price,
-      priceCurrency: "EGP",
-      url: `${SITE.url}${tripHref(t)}`,
-      availability: "https://schema.org/InStock",
-    },
+    // Offer markup needs a price, so it's left out until the trip has one.
+    ...(t.price > 0 && {
+      offers: {
+        "@type": "Offer",
+        price: t.price,
+        priceCurrency: "EGP",
+        url: `${SITE.url}${tripHref(t)}`,
+        availability: "https://schema.org/InStock",
+      },
+    }),
     provider: { "@id": ORG_ID },
   };
 }

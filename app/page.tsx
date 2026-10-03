@@ -8,7 +8,7 @@ import { formatPrice } from "@/lib/offers";
 import { bookableOffers } from "@/lib/offers-data";
 import { SECTIONS } from "@/lib/sections";
 import { SITE, whatsappLink } from "@/lib/site";
-import { TRIPS, tripHref } from "@/lib/trips";
+import { ASK_TRIP_PRICE, TRIPS, tripHref } from "@/lib/trips";
 
 // Offers come from the database, so the page is rendered on each visit.
 export const dynamic = "force-dynamic";
@@ -83,7 +83,7 @@ export default async function HomePage() {
               <div>
                 <h3>{t.title}</h3>
                 <p className="muted">
-                  {t.duration} · يبدأ من {formatPrice(t.price)} للفرد
+                  {t.duration} · {t.price > 0 ? `يبدأ من ${formatPrice(t.price)} للفرد` : ASK_TRIP_PRICE}
                 </p>
               </div>
             </Link>

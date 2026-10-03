@@ -29,7 +29,7 @@ export function GET() {
 
 ## برامج أسوان والنوبة
 
-${TRIPS.map((t) => `- [${t.title}](${u(tripHref(t))}): ${t.duration}، يبدأ من ${formatPrice(t.price)} للفرد بالطيارة (بالقطر أقل بحوالي ${formatPrice(TRAIN_DISCOUNT)}). ${t.summary}`).join("\n")}
+${TRIPS.map((t) => `- [${t.title}](${u(tripHref(t))}): ${t.duration}، ${t.price > 0 ? `يبدأ من ${formatPrice(t.price)} للفرد بالطيارة (بالقطر أقل بحوالي ${formatPrice(TRAIN_DISCOUNT)})` : "السعر عند الطلب"}. ${t.summary}`).join("\n")}
 
 ## المدوّنة
 

@@ -7,13 +7,16 @@ export type Trip = {
   title: string;
   duration: string;
   days: number;
-  price: number; // starting price per person by plane, in EGP
+  price: number; // starting price per person by plane, in EGP; 0 = not set yet, shown as "اسأل عن السعر"
   summary: string;
   itinerary: TripDay[];
   image: { src: string; alt: string };
 };
 
 /** Going by train instead of plane lowers the price by about this much per person. */
+/** Shown instead of a trip price that isn't set yet. */
+export const ASK_TRIP_PRICE = "اسأل عن السعر";
+
 export const TRAIN_DISCOUNT = 5000;
 
 const BASE_DAYS: TripDay[] = [
@@ -46,7 +49,7 @@ export const TRIPS: Trip[] = [
     title: "أسوان في 3 أيام",
     duration: "3 أيام (ليلتين)",
     days: 3,
-    price: 9950,
+    price: 0,
     summary: "النيل والفلوكة، ومعبد فيلة، والمسلة الناقصة والسد العالي، وغدا في بيت نوبي في غرب سهيل.",
     itinerary: [...BASE_DAYS, { ...LAST_DAY, title: "اليوم التالت: السوق والرجوع" }],
     image: { src: "/images/trips/nile.webp", alt: "معبد فيلة على النيل" },
@@ -56,7 +59,7 @@ export const TRIPS: Trip[] = [
     title: "أسوان وأبو سمبل في 4 أيام",
     duration: "4 أيام (3 ليالي)",
     days: 4,
-    price: 10550,
+    price: 0,
     summary: "برنامج الـ 3 أيام كامل، ويوم زيادة لمعبدين أبو سمبل: معبد رمسيس التاني ومعبد نفرتاري.",
     itinerary: [
       ...BASE_DAYS,

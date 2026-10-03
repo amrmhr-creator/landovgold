@@ -9,7 +9,7 @@ import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { formatPrice } from "@/lib/offers";
 import { tripLd } from "@/lib/seo";
 import { whatsappLink } from "@/lib/site";
-import { TRIPS, getTrip } from "@/lib/trips";
+import { ASK_TRIP_PRICE, TRIPS, getTrip } from "@/lib/trips";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -23,7 +23,10 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const trip = getTrip((await params).slug);
   if (!trip) return {};
   const title = `${trip.title}: البرنامج يوم بيوم`;
-  const description = `${trip.duration}. ${trip.summary} يبدأ من ${formatPrice(trip.price)} للفرد بالطيارة.`;
+  const description =
+    trip.price > 0
+      ? `${trip.duration}. ${trip.summary} يبدأ من ${formatPrice(trip.price)} للفرد بالطيارة.`
+      : `${trip.duration}. ${trip.summary}`;
   return { title, description, openGraph: { title, description, images: [trip.image.src] } };
 }
 
@@ -49,7 +52,13 @@ export default async function TripPage({ params }: Params) {
           />
           <p className="muted">{trip.duration}</p>
           <p className="trip-price">
-            يبدأ من <strong>{formatPrice(trip.price)}</strong> للفرد بالطيارة
+            {trip.price > 0 ? (
+              <>
+                يبدأ من <strong>{formatPrice(trip.price)}</strong> للفرد بالطيارة
+              </>
+            ) : (
+              <strong>{ASK_TRIP_PRICE}</strong>
+            )}
           </p>
 
           <h2>البرنامج يوم بيوم</h2>
