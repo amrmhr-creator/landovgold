@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { formatPrice } from "@/lib/offers";
-import { TRAIN_DISCOUNT, TRIP_EXCLUDES, TRIP_INCLUDES } from "@/lib/trips";
+import { TRIP_EXCLUDES, TRIP_INCLUDES } from "@/lib/trips";
 
 /** What every Aswan program includes, travel choice and payment options. Shared by the section and program pages. */
 export default function TripTerms() {
@@ -25,10 +24,10 @@ export default function TripTerms() {
         <h2>تختار تسافر إزاي</h2>
         <ul>
           <li>
-            <strong>بالطيارة:</strong> أسرع وبتوفّر يوم سفر، والسعر المكتوب بيها.
+            <strong>بالطيارة:</strong> أسرع وبتوفّر يوم سفر.
           </li>
           <li>
-            <strong>بالقطر:</strong> أوفر، وبيقل السعر حوالي {formatPrice(TRAIN_DISCOUNT)} للفرد.
+            <strong>بالقطر:</strong> أوفر في السعر.
           </li>
         </ul>
         <h2>خيارات الدفع</h2>

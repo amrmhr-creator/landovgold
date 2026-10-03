@@ -13,11 +13,8 @@ export type Trip = {
   image: { src: string; alt: string };
 };
 
-/** Going by train instead of plane lowers the price by about this much per person. */
 /** Shown instead of a trip price that isn't set yet. */
 export const ASK_TRIP_PRICE = "اسأل عن السعر";
-
-export const TRAIN_DISCOUNT = 5000;
 
 const BASE_DAYS: TripDay[] = [
   {
