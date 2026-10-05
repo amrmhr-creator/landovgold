@@ -5,6 +5,7 @@ import path from "node:path";
 import { ARTICLES, type Article } from "./blog";
 import { writeJsonFile } from "./json-file";
 import { cairoToday } from "./offers";
+import { addToTrash } from "./trash";
 import { uploadDir } from "./uploads";
 
 // Articles edited from /admin/articles, saved as articles.json next to the settings (outside the
@@ -80,5 +81,22 @@ export async function setArticleHidden(slug: string, hidden: boolean) {
   const article = articles.find((a) => a.slug === slug);
   if (!article) return;
   article.hidden = hidden;
+  await writeJsonFile(articlesFile(), articles);
+}
+
+export async function deleteArticle(slug: string) {
+  const articles = await readArticles();
+  const article = articles.find((a) => a.slug === slug);
+  if (!article) return;
+  await writeJsonFile(
+    articlesFile(),
+    articles.filter((a) => a !== article),
+  );
+  await addToTrash("article", article.title, article);
+}
+
+export async function restoreArticle(article: StoredArticle) {
+  const articles = await readArticles();
+  if (!articles.some((a) => a.slug === article.slug)) articles.push(article);
   await writeJsonFile(articlesFile(), articles);
 }

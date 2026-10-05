@@ -3,8 +3,9 @@ import { randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { writeJsonFile } from "./json-file";
+import { addToTrash } from "./trash";
 import { TRIPS, type Trip } from "./trips";
-import { setTripPhoto, sitePhotos, uploadDir } from "./uploads";
+import { getPicks, setTripPhoto, sitePhotos, uploadDir } from "./uploads";
 
 // Trips edited from /admin/trips, saved as trips.json next to the settings (outside the app
 // folder). Until the first save the site shows the programs written in lib/trips.ts. A trip's
@@ -76,4 +77,25 @@ export async function setTripHidden(slug: string, hidden: boolean) {
   if (!trip) return;
   trip.hidden = hidden;
   await writeJsonFile(tripsFile(), trips);
+}
+
+/** Moves a trip to the trash (with its picked photo, so a restore brings both back). */
+export async function deleteTrip(slug: string) {
+  const trips = await readTrips();
+  const trip = trips.find((t) => t.slug === slug);
+  if (!trip) return;
+  const photo = (await getPicks()).trips[slug] ?? "";
+  await writeJsonFile(
+    tripsFile(),
+    trips.filter((t) => t !== trip),
+  );
+  await setTripPhoto(slug, "");
+  await addToTrash("trip", trip.title, { trip, photo });
+}
+
+export async function restoreTrip(data: { trip: StoredTrip; photo: string }) {
+  const trips = await readTrips();
+  if (!trips.some((t) => t.slug === data.trip.slug)) trips.push(data.trip);
+  await writeJsonFile(tripsFile(), trips);
+  if (data.photo) await setTripPhoto(data.trip.slug, data.photo);
 }

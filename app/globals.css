@@ -1262,6 +1262,11 @@ img {
   border-radius: var(--radius);
 }
 
+.admin-delete {
+  color: #a33;
+  border-color: #e3b5b5;
+}
+
 /* Admin: photos */
 .admin-images-top {
   display: grid;

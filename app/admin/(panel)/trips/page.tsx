@@ -1,5 +1,6 @@
 import Link from "next/link";
 import CopyButton from "@/components/CopyButton";
+import DeleteButton from "@/components/DeleteButton";
 import { requireAdmin } from "@/lib/admin-auth";
 import { formatPrice } from "@/lib/offers";
 import { SITE } from "@/lib/site";
@@ -71,6 +72,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ s
                     {t.hidden ? "اظهرها" : "اخفيها"}
                   </button>
                 </form>
+                <DeleteButton kind="trip" itemKey={t.slug} />
               </td>
             </tr>
           ))}

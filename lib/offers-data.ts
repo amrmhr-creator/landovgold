@@ -1,6 +1,7 @@
 import "server-only";
 import { dbConfigured, describeError, query } from "./db";
 import { SAMPLE_OFFERS, isBookable, type Offer } from "./offers";
+import { addToTrash } from "./trash";
 
 // Offers in MySQL, managed from /admin/offers. Without a database (local development)
 // the site shows SAMPLE_OFFERS instead. An empty table gets SAMPLE_OFFERS once, so the
@@ -142,4 +143,18 @@ export async function updateOffer(id: number, o: OfferInput) {
 export async function setOfferAvailable(id: number, available: boolean) {
   await ensureOffersTable();
   await query("UPDATE offers SET available = ? WHERE id = ?", [available ? 1 : 0, id]);
+}
+
+/** Moves an offer to the trash. */
+export async function deleteOffer(id: number) {
+  const offer = await getOfferById(id);
+  if (!offer) return;
+  await query("DELETE FROM offers WHERE id = ?", [id]);
+  await addToTrash("offer", `${offer.from} ← ${offer.to}`, offer);
+}
+
+/** Puts an offer back under its old link (or a free variation of it, if that link was reused). */
+export async function restoreOffer(offer: Offer) {
+  const { id: _id, slug, ...input } = offer;
+  await createOffer(input, slug);
 }

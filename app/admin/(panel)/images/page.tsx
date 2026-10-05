@@ -1,4 +1,5 @@
 import CopyButton from "@/components/CopyButton";
+import DeleteButton from "@/components/DeleteButton";
 import { requireAdmin } from "@/lib/admin-auth";
 import { SITE } from "@/lib/site";
 import { allTrips } from "@/lib/trips-data";
@@ -116,6 +117,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ s
                     <CopyButton text={`${SITE.url}${imageUrl(i.name)}`} />
                   </div>
                 </form>
+                <DeleteButton kind="image" itemKey={i.name} label="امسح الصورة" />
               </div>
             ))}
           </div>

@@ -1,3 +1,4 @@
+import DeleteButton from "@/components/DeleteButton";
 import { requireAdmin } from "@/lib/admin-auth";
 import { allFaq, type FaqItem, type StoredFaqGroup } from "@/lib/faq-data";
 import { moveQuestionAction, saveQuestionAction } from "../../actions";
@@ -94,6 +95,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ s
                       </button>
                     </form>
                   )}
+                  <DeleteButton kind="question" itemKey={item.id} label="امسح السؤال" />
                 </div>
               </div>
             </details>

@@ -2,7 +2,9 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { uploadDir } from "./data-dir";
 import { writeJsonFile } from "./json-file";
+import { addToTrash } from "./trash";
 
 // Photos uploaded from the admin panel. They live outside the app folder (UPLOAD_DIR, or a
 // "landovgold-uploads" folder next to it) so a new deploy never wipes them, and are served
@@ -32,9 +34,7 @@ type Library = { images: UploadedImage[]; picks: ImagePicks };
 
 const EMPTY: Library = { images: [], picks: { trips: {}, gallery: [], about: [] } };
 
-export function uploadDir() {
-  return process.env.UPLOAD_DIR || path.resolve(process.cwd(), "..", "landovgold-uploads");
-}
+export { uploadDir };
 
 const libraryFile = () => path.join(uploadDir(), "library.json");
 
@@ -174,5 +174,35 @@ export async function setTripPhoto(slug: string, name: string) {
   const lib = await readLibrary();
   if (name && lib.images.some((i) => i.name === name)) lib.picks.trips[slug] = name;
   else delete lib.picks.trips[slug];
+  await writeLibrary(lib);
+}
+
+/**
+ * Moves a photo to the trash: it leaves the photo list and every place it was picked for.
+ * Its files stay on disk until the trash is emptied, so pages still using it keep working meanwhile.
+ */
+export async function deleteImage(name: string) {
+  const lib = await readLibrary();
+  const image = lib.images.find((i) => i.name === name);
+  if (!image) return;
+  const usedFor = {
+    trips: Object.keys(lib.picks.trips).filter((slug) => lib.picks.trips[slug] === name),
+    gallery: lib.picks.gallery.includes(name),
+    about: lib.picks.about.includes(name),
+  };
+  lib.images = lib.images.filter((i) => i !== image);
+  for (const slug of usedFor.trips) delete lib.picks.trips[slug];
+  lib.picks.gallery = lib.picks.gallery.filter((n) => n !== name);
+  lib.picks.about = lib.picks.about.filter((n) => n !== name);
+  await writeLibrary(lib);
+  await addToTrash("image", image.alt || "صورة من غير وصف", { image, usedFor });
+}
+
+export async function restoreImage(data: { image: UploadedImage; usedFor: { trips: string[]; gallery: boolean; about: boolean } }) {
+  const lib = await readLibrary();
+  if (!lib.images.some((i) => i.name === data.image.name)) lib.images.push(data.image);
+  for (const slug of data.usedFor.trips) lib.picks.trips[slug] ??= data.image.name;
+  if (data.usedFor.gallery && !lib.picks.gallery.includes(data.image.name)) lib.picks.gallery.push(data.image.name);
+  if (data.usedFor.about && !lib.picks.about.includes(data.image.name)) lib.picks.about.push(data.image.name);
   await writeLibrary(lib);
 }

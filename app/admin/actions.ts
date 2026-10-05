@@ -5,15 +5,16 @@ import { redirect } from "next/navigation";
 import { RESET_LINK_MINUTES, createResetToken, passwordProblem, resetPassword, setOwnerPassword } from "@/lib/admin-accounts";
 import { checkPassword, logIn, logOut, requireAdmin, startSession } from "@/lib/admin-auth";
 import { AIRPORTS } from "@/lib/airports";
-import { ArticleError, saveArticle, setArticleHidden } from "@/lib/blog-data";
+import { ArticleError, deleteArticle, restoreArticle, saveArticle, setArticleHidden } from "@/lib/blog-data";
 import { describeError } from "@/lib/db";
-import { isGroupKey, moveQuestion, saveQuestion } from "@/lib/faq-data";
+import { deleteQuestion, isGroupKey, moveQuestion, restoreQuestion, saveQuestion } from "@/lib/faq-data";
 import { escapeHtml, mailConfigured, sendMail } from "@/lib/mail";
-import { createOffer, setOfferAvailable, updateOffer, type OfferInput } from "@/lib/offers-data";
+import { createOffer, deleteOffer, restoreOffer, setOfferAvailable, updateOffer, type OfferInput } from "@/lib/offers-data";
 import { SettingsError, saveSettings } from "@/lib/settings";
 import { SITE } from "@/lib/site";
-import { saveTrip, setTripHidden } from "@/lib/trips-data";
-import { isImageName, savePicks, updateAlt } from "@/lib/uploads";
+import { purgeFromTrash, takeFromTrash, type TrashKind } from "@/lib/trash";
+import { deleteTrip, restoreTrip, saveTrip, setTripHidden } from "@/lib/trips-data";
+import { deleteImage, isImageName, restoreImage, savePicks, updateAlt } from "@/lib/uploads";
 
 export async function loginAction(formData: FormData) {
   const error = await logIn(String(formData.get("password") ?? ""));
@@ -321,4 +322,49 @@ export async function toggleArticleAction(formData: FormData) {
   await setArticleHidden(String(formData.get("slug") ?? ""), formData.get("hide") === "1");
   revalidatePath("/", "layout");
   redirect("/admin/articles");
+}
+
+// ---------- Trash ----------
+
+const BACK_TO: Record<TrashKind, string> = {
+  offer: "/admin/offers",
+  trip: "/admin/trips",
+  question: "/admin/faq",
+  article: "/admin/articles",
+  image: "/admin/images",
+};
+
+/** Moves an item to the trash. The form sends its kind and key (id, slug or file name). */
+export async function deleteItemAction(formData: FormData) {
+  await requireAdmin();
+  const kind = text(formData, "kind", 20) as TrashKind;
+  const key = text(formData, "key", 120);
+  if (kind === "offer") await deleteOffer(Number(key));
+  else if (kind === "trip") await deleteTrip(key);
+  else if (kind === "question") await deleteQuestion(key);
+  else if (kind === "article") await deleteArticle(key);
+  else if (kind === "image" && isImageName(key)) await deleteImage(key);
+  revalidatePath("/", "layout");
+  redirect(`${BACK_TO[kind] ?? "/admin"}?deleted=1`);
+}
+
+export async function restoreItemAction(formData: FormData) {
+  await requireAdmin();
+  const entry = await takeFromTrash(text(formData, "id", 20));
+  if (entry) {
+    const data = entry.data as never;
+    if (entry.kind === "offer") await restoreOffer(data);
+    else if (entry.kind === "trip") await restoreTrip(data);
+    else if (entry.kind === "question") await restoreQuestion(data);
+    else if (entry.kind === "article") await restoreArticle(data);
+    else if (entry.kind === "image") await restoreImage(data);
+  }
+  revalidatePath("/", "layout");
+  redirect("/admin/trash?restored=1");
+}
+
+export async function purgeItemAction(formData: FormData) {
+  await requireAdmin();
+  await purgeFromTrash(text(formData, "id", 20));
+  redirect("/admin/trash");
 }

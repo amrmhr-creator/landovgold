@@ -14,6 +14,7 @@ const NAV = [
   { href: "/admin/articles", label: "المقالات" },
   { href: "/admin/images", label: "الصور" },
   { href: "/admin/settings", label: "الإعدادات" },
+  { href: "/admin/trash", label: "السلة" },
   { href: "/admin/account", label: "حسابي" },
 ];
 

@@ -5,6 +5,7 @@ import path from "node:path";
 import { FAQ, type FaqGroup } from "./faq";
 import { writeJsonFile } from "./json-file";
 import type { SectionKey } from "./sections";
+import { addToTrash } from "./trash";
 import { uploadDir } from "./uploads";
 
 // Questions edited from /admin/faq, saved as faq.json next to the settings (outside the app
@@ -82,6 +83,27 @@ export async function moveQuestion(id: string, direction: -1 | 1) {
     if (i < 0) continue;
     if (j >= 0 && j < g.items.length) [g.items[i], g.items[j]] = [g.items[j], g.items[i]];
     break;
+  }
+  await writeJsonFile(faqFile(), groups);
+}
+
+export async function deleteQuestion(id: string) {
+  const groups = await readFaq();
+  for (const g of groups) {
+    const index = g.items.findIndex((i) => i.id === id);
+    if (index < 0) continue;
+    const [item] = g.items.splice(index, 1);
+    await writeJsonFile(faqFile(), groups);
+    await addToTrash("question", item.q, { group: g.key, index, item });
+    return;
+  }
+}
+
+export async function restoreQuestion(data: { group: StoredFaqGroup["key"]; index: number; item: FaqItem }) {
+  const groups = await readFaq();
+  const group = groups.find((g) => g.key === data.group) ?? groups[groups.length - 1];
+  if (!groups.some((g) => g.items.some((i) => i.id === data.item.id))) {
+    group.items.splice(Math.min(data.index, group.items.length), 0, data.item);
   }
   await writeJsonFile(faqFile(), groups);
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import CopyButton from "@/components/CopyButton";
+import DeleteButton from "@/components/DeleteButton";
 import { requireAdmin } from "@/lib/admin-auth";
 import { dbConfigured, describeError } from "@/lib/db";
 import { cairoToday, formatDate, offerPrice, offerTitle, type Offer } from "@/lib/offers";
@@ -102,6 +103,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ s
                           {o.available ? "إخفاء" : "إظهار"}
                         </button>
                       </form>
+                      <DeleteButton kind="offer" itemKey={String(o.id)} />
                     </td>
                   </tr>
                 );
