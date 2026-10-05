@@ -1,4 +1,5 @@
-// Aswan & Nubia programs (from CONTENT.md). Fixed programs, so they live here until the admin panel.
+// The starting trips (from CONTENT.md) and shared trip helpers. The owner edits trips from
+// /admin/trips (lib/trips-data.ts); these are shown until his first save.
 
 export type TripDay = { title: string; items: string[] };
 
@@ -84,10 +85,6 @@ export const TRIP_INCLUDES = [
 ];
 
 export const TRIP_EXCLUDES = ["تذاكر دخول الأماكن الأثرية", "باقي الوجبات"];
-
-export function getTrip(slug: string) {
-  return TRIPS.find((t) => t.slug === slug);
-}
 
 /** Each program has its own page; this is the link to it. */
 export function tripHref(t: Trip) {

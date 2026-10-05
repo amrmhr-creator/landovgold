@@ -8,7 +8,8 @@ import { formatPrice, offerTitle } from "@/lib/offers";
 import { bookableOffers } from "@/lib/offers-data";
 import { SECTIONS } from "@/lib/sections";
 import { SITE, whatsappLink } from "@/lib/site";
-import { ASK_TRIP_PRICE, TRIPS, tripHref } from "@/lib/trips";
+import { ASK_TRIP_PRICE, tripHref } from "@/lib/trips";
+import { visibleTrips } from "@/lib/trips-data";
 import { getSettings } from "@/lib/settings";
 import { sitePhotos } from "@/lib/uploads";
 
@@ -19,7 +20,7 @@ export default async function HomePage() {
   const latestOffers = (await bookableOffers()).slice(0, 3);
   const { flights, aswan } = SECTIONS;
   const [photos, s] = await Promise.all([sitePhotos(), getSettings()]);
-  const trips = TRIPS.map((t) => ({ ...t, image: photos.trip(t.slug, t.image.alt) ?? t.image }));
+  const trips = await visibleTrips();
 
   return (
     <>

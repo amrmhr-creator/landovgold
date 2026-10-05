@@ -168,3 +168,11 @@ export async function sitePhotos() {
     },
   };
 }
+
+/** Sets (or, with "", clears) the uploaded photo shown for a trip. */
+export async function setTripPhoto(slug: string, name: string) {
+  const lib = await readLibrary();
+  if (name && lib.images.some((i) => i.name === name)) lib.picks.trips[slug] = name;
+  else delete lib.picks.trips[slug];
+  await writeLibrary(lib);
+}

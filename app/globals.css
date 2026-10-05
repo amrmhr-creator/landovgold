@@ -1151,6 +1151,34 @@ img {
   color: var(--navy);
 }
 
+/* Admin: trip program */
+.admin-days {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--sand-deep);
+  border-radius: var(--radius);
+}
+
+.admin-days legend {
+  padding-inline: 8px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.admin-day {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed var(--sand-deep);
+}
+
+.admin-day .btn,
+.admin-days > .btn {
+  justify-self: start;
+}
+
 /* Admin: photos */
 .admin-images-top {
   display: grid;

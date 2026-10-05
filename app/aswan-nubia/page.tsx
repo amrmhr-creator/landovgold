@@ -11,7 +11,8 @@ import { formatPrice } from "@/lib/offers";
 import { SECTIONS } from "@/lib/sections";
 import { faqLd, tripLd } from "@/lib/seo";
 import { whatsappLink } from "@/lib/site";
-import { ASK_TRIP_PRICE, TRIPS, tripHref } from "@/lib/trips";
+import { ASK_TRIP_PRICE, tripHref } from "@/lib/trips";
+import { visibleTrips } from "@/lib/trips-data";
 import { sitePhotos } from "@/lib/uploads";
 
 // Photos are picked in the admin panel, so the page is rendered on each visit.
@@ -33,7 +34,7 @@ const GALLERY = [
 export default async function Page() {
   const faq = sectionFaq("aswan");
   const photos = await sitePhotos();
-  const trips = TRIPS.map((t) => ({ ...t, image: photos.trip(t.slug, t.image.alt) ?? t.image }));
+  const trips = await visibleTrips();
   const gallery = photos.gallery.length > 0 ? photos.gallery : GALLERY;
 
   return (
@@ -68,7 +69,10 @@ export default async function Page() {
                     {trip.title}
                   </Link>
                 </h2>
-                <p className="muted">{trip.duration}</p>
+                <p className="muted">
+                  {trip.duration}
+                  {trip.dates && ` · المواعيد: ${trip.dates}`}
+                </p>
                 <p>{trip.summary}</p>
                 <p className="trip-price">
                   {trip.price > 0 ? (
@@ -132,7 +136,7 @@ export default async function Page() {
         <div className="container narrow">
           <h2 className="section-title">احجز رحلتك</h2>
           <p className="section-sub">سيب بياناتك والبرنامج اللي عايزه، ونرجعلك بالمواعيد والسعر النهائي خلال 24 ساعة.</p>
-          <LeadForm kind="trip" />
+          <LeadForm kind="trip" trips={trips.map((t) => ({ slug: t.slug, title: t.title }))} />
         </div>
       </section>
 

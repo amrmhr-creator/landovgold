@@ -1,7 +1,7 @@
 import CopyButton from "@/components/CopyButton";
 import { requireAdmin } from "@/lib/admin-auth";
 import { SITE } from "@/lib/site";
-import { TRIPS } from "@/lib/trips";
+import { allTrips } from "@/lib/trips-data";
 import { canResize, getPicks, imageUrl, listImages, smallUrl, type UploadedImage } from "@/lib/uploads";
 import { saveImageAltAction, saveImagePicksAction } from "../../actions";
 import ImageUploader from "./ImageUploader";
@@ -16,7 +16,7 @@ function Thumb({ image }: { image: UploadedImage }) {
 export default async function Page({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
   await requireAdmin();
   const { saved } = await searchParams;
-  const [images, picks, resizeOk] = await Promise.all([listImages(), getPicks(), canResize()]);
+  const [images, picks, resizeOk, trips] = await Promise.all([listImages(), getPicks(), canResize(), allTrips()]);
 
   return (
     <>
@@ -54,7 +54,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ s
           <form action={saveImagePicksAction} className="admin-picks">
             <fieldset>
               <legend>صورة كل رحلة</legend>
-              {TRIPS.map((t) => (
+              {trips.map((t) => (
                 <label key={t.slug}>
                   {t.title}
                   <select name={`trip:${t.slug}`} defaultValue={picks.trips[t.slug] ?? ""}>

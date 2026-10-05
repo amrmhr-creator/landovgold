@@ -10,6 +10,7 @@ import { escapeHtml, mailConfigured, sendMail } from "@/lib/mail";
 import { createOffer, setOfferAvailable, updateOffer, type OfferInput } from "@/lib/offers-data";
 import { SettingsError, saveSettings } from "@/lib/settings";
 import { SITE } from "@/lib/site";
+import { saveTrip, setTripHidden } from "@/lib/trips-data";
 import { isImageName, savePicks, updateAlt } from "@/lib/uploads";
 
 export async function loginAction(formData: FormData) {
@@ -200,4 +201,65 @@ export async function resetPasswordAction(_prev: PasswordFormState, formData: Fo
   }
   await startSession();
   redirect("/admin?password=changed");
+}
+
+export type TripFormState = {
+  error: string;
+  values: Record<string, string>;
+  days: { title: string; items: string }[];
+  attempt: number;
+};
+
+export async function saveTripAction(prev: TripFormState, formData: FormData): Promise<TripFormState> {
+  await requireAdmin();
+  const values = Object.fromEntries(
+    [...formData.entries()].filter(([k]) => k !== "dayTitle" && k !== "dayItems").map(([k, v]) => [k, String(v)]),
+  );
+  values.visible = formData.get("visible") === "on" ? "on" : "off";
+  const titles = formData.getAll("dayTitle").map((t) => String(t).trim().slice(0, 120));
+  const items = formData.getAll("dayItems").map((t) => String(t).slice(0, 1500));
+  const days = titles.map((title, i) => ({ title, items: items[i] ?? "" }));
+  const fail = (error: string) => ({ error, values, days, attempt: prev.attempt + 1 });
+
+  const title = text(formData, "title", 120);
+  const duration = text(formData, "duration", 60);
+  const summary = text(formData, "summary", 400);
+  const price = Number(text(formData, "price", 9).replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))));
+  const itinerary = days
+    .map((d) => ({
+      title: d.title,
+      items: d.items
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    }))
+    .filter((d) => d.title || d.items.length);
+
+  if (!title || !duration || !summary) return fail("اكتب اسم الرحلة والمدة والملخص.");
+  if (!Number.isInteger(price) || price < 0) return fail("اكتب السعر بالجنيه، رقم صحيح، أو سيبه فاضي.");
+  if (itinerary.length === 0 || itinerary.some((d) => !d.title || d.items.length === 0)) {
+    return fail("كل يوم في البرنامج محتاج عنوان وحاجة واحدة على الأقل.");
+  }
+
+  const photo = text(formData, "photo", 40);
+  const slug = await saveTrip(text(formData, "slug", 40) || null, {
+    title,
+    duration,
+    days: itinerary.length,
+    price,
+    summary,
+    dates: text(formData, "dates", 150) || undefined,
+    itinerary,
+    hidden: values.visible !== "on",
+    photo: isImageName(photo) ? photo : "",
+  });
+  revalidatePath("/", "layout");
+  redirect(`/admin/trips?saved=${slug}`);
+}
+
+export async function toggleTripAction(formData: FormData) {
+  await requireAdmin();
+  await setTripHidden(String(formData.get("slug") ?? ""), formData.get("hide") === "1");
+  revalidatePath("/", "layout");
+  redirect("/admin/trips");
 }

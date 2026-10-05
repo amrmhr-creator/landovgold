@@ -4,7 +4,7 @@ import { SERVICES, SERVICE_SECTION, TRANSPORT } from "@/lib/lead-options";
 import { submitLead, type Lead } from "@/lib/leads";
 import { offerTitle } from "@/lib/offers";
 import { getOffer } from "@/lib/offers-data";
-import { getTrip } from "@/lib/trips";
+import { findTrip } from "@/lib/trips-data";
 
 // Spam brake: 10 stored leads per IP per 10 minutes. Only successes count, so a visitor
 // retrying after one of our failures isn't locked out.
@@ -87,7 +87,7 @@ async function parseRequest(body: Record<string, unknown>): Promise<Omit<Lead, "
     return { kind, section: "flights", destination: `${from} ← ${to}`, travelDate: needDate(), travelers: needTravelers(), details: null, offerSlug: null };
   }
   if (kind === "trip") {
-    const trip = getTrip(clean(body.trip, 120));
+    const trip = await findTrip(clean(body.trip, 120));
     const transport = oneOf(TRANSPORT, clean(body.transport, 20));
     if (!trip || !transport) throw new InvalidLead("اختار البرنامج وطريقة السفر.");
     return { kind, section: "aswan", destination: `${trip.title} (${transport})`, travelDate: needDate(), travelers: needTravelers(), details: null, offerSlug: trip.slug };

@@ -3,13 +3,14 @@ import { ARTICLES } from "@/lib/blog";
 import { formatPrice } from "@/lib/offers";
 import { getSettings } from "@/lib/settings";
 import { SITE } from "@/lib/site";
-import { TRIPS, tripHref } from "@/lib/trips";
+import { tripHref } from "@/lib/trips";
+import { visibleTrips } from "@/lib/trips-data";
 
 // Contact details come from /admin/settings.
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const s = await getSettings();
+  const [s, trips] = await Promise.all([getSettings(), visibleTrips()]);
   const u = (path: string) => `${SITE.url}${path}`;
   const text = `# ${SITE.name}
 
@@ -32,7 +33,7 @@ export async function GET() {
 
 ## برامج أسوان والنوبة
 
-${TRIPS.map((t) => `- [${t.title}](${u(tripHref(t))}): ${t.duration}، ${t.price > 0 ? `يبدأ من ${formatPrice(t.price)} للفرد بالطيارة (والقطر أوفر)` : "السعر عند الطلب"}. ${t.summary}`).join("\n")}
+${trips.map((t) => `- [${t.title}](${u(tripHref(t))}): ${t.duration}، ${t.price > 0 ? `يبدأ من ${formatPrice(t.price)} للفرد بالطيارة (والقطر أوفر)` : "السعر عند الطلب"}. ${t.summary}`).join("\n")}
 
 ## المدوّنة
 

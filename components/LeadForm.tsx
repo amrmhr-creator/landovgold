@@ -8,7 +8,6 @@ import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { SERVICES, TRANSPORT } from "@/lib/lead-options";
 import { formatDate } from "@/lib/offers";
 import { whatsappLink } from "@/lib/site";
-import { TRIPS } from "@/lib/trips";
 
 /**
  * offer:   a flight offer page; route and date come from the offer.
@@ -26,6 +25,8 @@ type Props = {
   offerLabel?: string;
   /** Preselected program (kind "trip"). */
   trip?: string;
+  /** The programs to choose from (kind "trip"). */
+  trips?: { slug: string; title: string }[];
   title?: string;
   submitLabel?: string;
   /**
@@ -41,14 +42,14 @@ function localToday() {
 }
 
 /** What the visitor asked for, in words, for the WhatsApp follow-up message. */
-function describeRequest(kind: LeadKind, data: Record<string, string>, offerLabel?: string) {
+function describeRequest(kind: LeadKind, data: Record<string, string>, offerLabel: string | undefined, trips: { slug: string; title: string }[]) {
   switch (kind) {
     case "offer":
       return `عرض ${offerLabel ?? ""}`;
     case "flight":
       return `${data.from} ← ${data.to} يوم ${formatDate(data.date)}، ${data.travelers} فرد`;
     case "trip": {
-      const trip = TRIPS.find((t) => t.slug === data.trip);
+      const trip = trips.find((t) => t.slug === data.trip);
       return `${trip?.title ?? "رحلة أسوان"} يوم ${formatDate(data.date)}، ${data.travelers} فرد`;
     }
     case "contact":
@@ -56,7 +57,7 @@ function describeRequest(kind: LeadKind, data: Record<string, string>, offerLabe
   }
 }
 
-export default function LeadForm({ kind, offer, offerLabel, trip, title, submitLabel = "ابعت الطلب", quick = false }: Props) {
+export default function LeadForm({ kind, offer, offerLabel, trip, trips = [], title, submitLabel = "ابعت الطلب", quick = false }: Props) {
   const pathname = usePathname();
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [error, setError] = useState("");
@@ -84,7 +85,7 @@ export default function LeadForm({ kind, offer, offerLabel, trip, title, submitL
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || "حصلت مشكلة، جرّب تاني.");
-      setWaMessage(`أهلاً بلاد الدهب، أنا ${data.name}، لسه باعت طلب على الموقع: ${describeRequest(kind, data, offerLabel)}`);
+      setWaMessage(`أهلاً بلاد الدهب، أنا ${data.name}، لسه باعت طلب على الموقع: ${describeRequest(kind, data, offerLabel, trips)}`);
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "حصلت مشكلة، جرّب تاني.");
@@ -200,8 +201,8 @@ export default function LeadForm({ kind, offer, offerLabel, trip, title, submitL
         <>
           <label>
             البرنامج
-            <select name="trip" required defaultValue={trip ?? TRIPS[0].slug}>
-              {TRIPS.map((t) => (
+            <select name="trip" required defaultValue={trip ?? trips[0]?.slug}>
+              {trips.map((t) => (
                 <option key={t.slug} value={t.slug}>
                   {t.title}
                 </option>
