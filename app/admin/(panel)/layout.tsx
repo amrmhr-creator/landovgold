@@ -11,6 +11,7 @@ const NAV = [
   { href: "/admin/offers", label: "العروض" },
   { href: "/admin/trips", label: "الرحلات" },
   { href: "/admin/faq", label: "الأسئلة" },
+  { href: "/admin/articles", label: "المقالات" },
   { href: "/admin/images", label: "الصور" },
   { href: "/admin/settings", label: "الإعدادات" },
   { href: "/admin/account", label: "حسابي" },

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import PageHead from "@/components/PageHead";
-import { ARTICLES } from "@/lib/blog";
+import { visibleArticles } from "@/lib/blog-data";
 
 export const metadata = {
   title: "المدوّنة",
@@ -8,7 +8,11 @@ export const metadata = {
     "نصايح سفر من ناس بتسافر وبتحجز كل يوم: إمتى أسعار الطيران بتنزل، والفيزا، وقايمة ما قبل السفر، وحكايات عن أسوان والنوبة من أهلها.",
 };
 
-export default function Page() {
+// Articles are edited in the admin panel, so the list is rendered on each visit.
+export const dynamic = "force-dynamic";
+
+export default async function Page() {
+  const articles = await visibleArticles();
   return (
     <>
       <PageHead
@@ -17,7 +21,7 @@ export default function Page() {
       />
       <section className="section container">
         <div className="grid-3">
-          {ARTICLES.map((a) => (
+          {articles.map((a) => (
             <article key={a.slug} className="card post-card">
               <span className="post-topic">{a.topic === "aswan" ? "أسوان والنوبة" : "نصايح سفر"}</span>
               <h2>

@@ -1209,6 +1209,59 @@ img {
   color: var(--gold-dark);
 }
 
+/* Admin: article editor */
+.admin-editor-label {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.admin-editor {
+  border: 1px solid var(--sand-deep);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.admin-editor-tools {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  background: var(--sand, #faf6ee);
+  border-bottom: 1px solid var(--sand-deep);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.admin-editor-images {
+  padding: 8px;
+  border-bottom: 1px solid var(--sand-deep);
+}
+
+.admin-editor-images button {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.admin-editor-box {
+  min-height: 320px;
+  max-width: none;
+  padding: 16px;
+  outline: none;
+}
+
+.admin-editor-box:focus {
+  box-shadow: inset 0 0 0 2px var(--gold);
+}
+
+.post-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+}
+
 /* Admin: photos */
 .admin-images-top {
   display: grid;

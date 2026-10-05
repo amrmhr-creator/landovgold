@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { RESET_LINK_MINUTES, createResetToken, passwordProblem, resetPassword, setOwnerPassword } from "@/lib/admin-accounts";
 import { checkPassword, logIn, logOut, requireAdmin, startSession } from "@/lib/admin-auth";
 import { AIRPORTS } from "@/lib/airports";
+import { ArticleError, saveArticle, setArticleHidden } from "@/lib/blog-data";
 import { describeError } from "@/lib/db";
 import { isGroupKey, moveQuestion, saveQuestion } from "@/lib/faq-data";
 import { escapeHtml, mailConfigured, sendMail } from "@/lib/mail";
@@ -282,4 +283,42 @@ export async function moveQuestionAction(formData: FormData) {
   await moveQuestion(text(formData, "id", 20), formData.get("dir") === "up" ? -1 : 1);
   revalidatePath("/", "layout");
   redirect(`/admin/faq#${text(formData, "group", 20)}`);
+}
+
+export type ArticleFormState = { error: string; values: Record<string, string>; attempt: number };
+
+export async function saveArticleAction(prev: ArticleFormState, formData: FormData): Promise<ArticleFormState> {
+  await requireAdmin();
+  const values = Object.fromEntries([...formData.entries()].map(([k, v]) => [k, String(v)]));
+  values.visible = formData.get("visible") === "on" ? "on" : "off";
+  const fail = (error: string) => ({ error, values, attempt: prev.attempt + 1 });
+
+  const title = text(formData, "title", 150);
+  const description = text(formData, "description", 200);
+  const summary = text(formData, "summary", 500);
+  const body = String(formData.get("body") ?? "").trim().slice(0, 60_000);
+  const topic = text(formData, "topic", 10) === "aswan" ? "aswan" : "flights";
+  if (!title || !description || !summary) return fail("اكتب العنوان والوصف والإجابة باختصار.");
+  if (body.length < 20) return fail("المقال فاضي. اكتب الكلام في المكان المخصص للمقال.");
+
+  let slug: string;
+  try {
+    slug = await saveArticle(
+      text(formData, "slug", 80) || null,
+      { title, description, summary, topic, body, hidden: values.visible !== "on" },
+      text(formData, "wantedSlug", 80),
+    );
+  } catch (err) {
+    if (err instanceof ArticleError) return fail(err.message);
+    throw err;
+  }
+  revalidatePath("/", "layout");
+  redirect(`/admin/articles?saved=${slug}`);
+}
+
+export async function toggleArticleAction(formData: FormData) {
+  await requireAdmin();
+  await setArticleHidden(String(formData.get("slug") ?? ""), formData.get("hide") === "1");
+  revalidatePath("/", "layout");
+  redirect("/admin/articles");
 }

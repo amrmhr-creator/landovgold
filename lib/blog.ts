@@ -1,4 +1,5 @@
-// Blog articles (from CONTENT.md). Body is Markdown, rendered at build time.
+// The starting blog articles (from CONTENT.md). The owner edits articles from /admin/articles
+// (lib/blog-data.ts); these are shown until his first save. Body is Markdown (lib/markdown.ts).
 // Every article opens with a short answer: that's the part AI search engines quote.
 // Facts here (visa rules, prices, seasons) change: re-check official sources now and then.
 
@@ -320,7 +321,3 @@ export const ARTICLES: Article[] = [
 `,
   },
 ];
-
-export function getArticle(slug: string) {
-  return ARTICLES.find((a) => a.slug === slug);
-}

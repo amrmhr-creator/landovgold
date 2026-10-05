@@ -1,5 +1,5 @@
 // /llms.txt: a plain summary of the business and its main pages for AI assistants (llmstxt.org).
-import { ARTICLES } from "@/lib/blog";
+import { visibleArticles } from "@/lib/blog-data";
 import { formatPrice } from "@/lib/offers";
 import { getSettings } from "@/lib/settings";
 import { SITE } from "@/lib/site";
@@ -10,7 +10,7 @@ import { visibleTrips } from "@/lib/trips-data";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const [s, trips] = await Promise.all([getSettings(), visibleTrips()]);
+  const [s, trips, articles] = await Promise.all([getSettings(), visibleTrips(), visibleArticles()]);
   const u = (path: string) => `${SITE.url}${path}`;
   const text = `# ${SITE.name}
 
@@ -37,7 +37,7 @@ ${trips.map((t) => `- [${t.title}](${u(tripHref(t))}): ${t.duration}، ${t.price
 
 ## المدوّنة
 
-${ARTICLES.map((a) => `- [${a.title}](${u(`/blog/${a.slug}`)}): ${a.summary}`).join("\n")}
+${articles.map((a) => `- [${a.title}](${u(`/blog/${a.slug}`)}): ${a.summary}`).join("\n")}
 `;
   return new Response(text, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
 }
