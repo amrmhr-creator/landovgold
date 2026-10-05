@@ -9,28 +9,16 @@ import { bookableOffers } from "@/lib/offers-data";
 import { SECTIONS } from "@/lib/sections";
 import { SITE, whatsappLink } from "@/lib/site";
 import { ASK_TRIP_PRICE, TRIPS, tripHref } from "@/lib/trips";
+import { getSettings } from "@/lib/settings";
 import { sitePhotos } from "@/lib/uploads";
 
 // Offers come from the database, so the page is rendered on each visit.
 export const dynamic = "force-dynamic";
 
-const STEPS = [
-  { title: "ابعتلنا طلبك", text: "على واتساب أو من الفورم: رايح فين، وإمتى، وكام فرد." },
-  { title: "نرجعلك بأكتر من اختيار", text: "خلال 24 ساعة، بأسعارها وتفاصيلها." },
-  { title: "تختار اللي يناسبك، واحنا نكمّل", text: "نخلّص الحجز ونبعتلك التأكيد على الواتساب." },
-];
-
-const WHY = [
-  { title: "أكتر من اختيار", text: "مش سعر واحد وخلاص، بنوريك البدائل وإنت تقرر." },
-  { title: "بنفهم ظروفك", text: "سواء إنت في مصر أو شغال برّه، عندنا طرق دفع ومواعيد تواصل تناسبك." },
-  { title: "من الجنوب", text: "رحلات أسوان والنوبة عندنا مش برنامج سياحي وبس، دي بلدنا." },
-  { title: "واضحين من الأول", text: "السعر اللي نتفق عليه هو اللي تدفعه، وشروط الإلغاء مكتوبة قدامك." },
-];
-
 export default async function HomePage() {
   const latestOffers = (await bookableOffers()).slice(0, 3);
   const { flights, aswan } = SECTIONS;
-  const photos = await sitePhotos();
+  const [photos, s] = await Promise.all([sitePhotos(), getSettings()]);
   const trips = TRIPS.map((t) => ({ ...t, image: photos.trip(t.slug, t.image.alt) ?? t.image }));
 
   return (
@@ -39,8 +27,8 @@ export default async function HomePage() {
       <section className="hero">
         <div className="container hero-inner">
           <p className="hero-brand">{SITE.name}</p>
-          <h1>تذاكر طيران بأسعار تناسبك</h1>
-          <p className="hero-lead">محلي ودولي. بندوّرلك على أكتر من سعر وأكتر من شركة، وإنت تختار.</p>
+          <h1>{s.get("home.heroTitle")}</h1>
+          <p className="hero-lead">{s.get("home.heroLead")}</p>
         </div>
       </section>
 
@@ -101,11 +89,11 @@ export default async function HomePage() {
         <div className="container">
           <h2 className="section-title">إزاي بنشتغل</h2>
           <ol className="steps">
-            {STEPS.map((s, i) => (
-              <li key={s.title}>
+            {s.homeSteps.map((step, i) => (
+              <li key={i}>
                 <span className="step-num">{i + 1}</span>
-                <h3>{s.title}</h3>
-                <p>{s.text}</p>
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
               </li>
             ))}
           </ol>
@@ -118,8 +106,8 @@ export default async function HomePage() {
       <section className="section container">
         <h2 className="section-title">ليه بلاد الدهب</h2>
         <div className="why-grid">
-          {WHY.map((w) => (
-            <div key={w.title} className="why-item">
+          {s.homeWhy.map((w, i) => (
+            <div key={i} className="why-item">
               <h3>{w.title}</h3>
               <p>{w.text}</p>
             </div>

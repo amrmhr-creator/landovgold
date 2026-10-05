@@ -1,3 +1,5 @@
+// Defaults. The owner can change the contact details, company details, social links and main
+// texts from /admin/settings (lib/settings.ts); these are used while a setting is empty.
 export const SITE = {
   name: "بلاد الدهب",
   url: "https://landovgold.com",
@@ -8,7 +10,7 @@ export const SITE = {
   hours: "يومياً من 10 الصبح لـ 10 بالليل بتوقيت مصر",
 };
 
-// Still missing from the owner. Empty values are hidden on the site, never shown as blanks.
+// Company details, filled in from /admin/settings. Empty values are hidden on the site, never shown as blanks.
 export const BUSINESS = {
   legalName: "", // الاسم الرسمي زي ما هو متسجّل
   commercialRegister: "", // رقم السجل التجاري
@@ -16,12 +18,6 @@ export const BUSINESS = {
   instapay: "", // عنوان الدفع على إنستاباي
   wallet: "", // رقم المحفظة الإلكترونية
 };
-
-export const SOCIAL: { label: string; href: string }[] = [
-  // { label: "فيسبوك", href: "https://facebook.com/..." },
-  // { label: "إنستجرام", href: "https://instagram.com/..." },
-  // { label: "تيك توك", href: "https://tiktok.com/@..." },
-];
 
 // The menu: the service sections (lib/sections.ts) first, then these company pages
 // grouped under "عن بلاد الدهب", then the contact page.
@@ -40,6 +36,7 @@ export const LEGAL = [
   { href: "/privacy", label: "سياسة الخصوصية" },
 ];
 
+/** A WhatsApp chat link. It goes through /wa, which sends it to the number set in the admin panel. */
 export function whatsappLink(message = "أهلاً بلاد الدهب، عايز أستفسر عن") {
-  return `https://wa.me/${SITE.whatsappNumber}?text=${encodeURIComponent(message)}`;
+  return `/wa?text=${encodeURIComponent(message)}`;
 }

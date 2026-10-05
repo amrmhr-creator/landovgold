@@ -1,49 +1,37 @@
 import Link from "next/link";
 import PageHead from "@/components/PageHead";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
-import { BUSINESS, SITE, whatsappLink } from "@/lib/site";
+import { getSettings } from "@/lib/settings";
+import { whatsappLink } from "@/lib/site";
 
 export const metadata = {
   title: "إزاي بنشتغل",
   description:
-    "3 خطوات: تبعت طلبك، نرجعلك بأكتر من سعر خلال 24 ساعة، تختار وتدفع. طرق الدفع بإنستاباي والمحفظة ولينك دفع بالكارت للمصريين في مصر وبرّه.",
+    "3 خطوات: تبعت طلبك، نرجعلك بأكتر من اختيار خلال 24 ساعة، وتختار اللي يناسبك. طرق الدفع بإنستاباي والمحفظة ولينك دفع بالكارت للمصريين في مصر وبرّه.",
 };
-
-const STEPS = [
-  {
-    title: "ابعتلنا طلبك.",
-    text: "على واتساب أو من الفورم. قولّنا رايح فين، وإمتى، وكام فرد، ولو عندك شركة طيران أو ميعاد معين بتفضّله.",
-  },
-  {
-    title: "نرجعلك بأكتر من اختيار خلال 24 ساعة.",
-    text: "بنقارن بين الشركات والمواعيد، ونبعتلك الاختيارات بأسعارها وتفاصيلها.",
-  },
-  {
-    title: "تختار اللي يناسبك، واحنا نكمّل.",
-    text: "نخلّص الحجز ونبعتلك التأكيد على الواتساب والإيميل.",
-  },
-];
 
 const ON_WHATSAPP = "بنبعتهولك على الواتساب بعد الاتفاق";
 
-const PAYMENT = [
-  { method: "إنستاباي", who: "اللي عنده حساب بنك مصري", details: BUSINESS.instapay || ON_WHATSAPP, ltr: !!BUSINESS.instapay },
-  { method: "محفظة إلكترونية", who: "اللي في مصر", details: BUSINESS.wallet || ON_WHATSAPP, ltr: !!BUSINESS.wallet },
-  { method: "لينك دفع (كارت أو محفظة)", who: "الكل، ومنهم المصريين برّه بكروت أجنبية", details: "بنبعتلك اللينك على الواتساب بعد الاتفاق", ltr: false },
-];
+export default async function Page() {
+  const s = await getSettings();
+  const { instapay, wallet } = s.business;
+  const payment = [
+    { method: "إنستاباي", who: "اللي عنده حساب بنك مصري", details: instapay || ON_WHATSAPP, ltr: !!instapay },
+    { method: "محفظة إلكترونية", who: "اللي في مصر", details: wallet || ON_WHATSAPP, ltr: !!wallet },
+    { method: "لينك دفع (كارت أو محفظة)", who: "الكل، ومنهم المصريين برّه بكروت أجنبية", details: "بنبعتلك اللينك على الواتساب بعد الاتفاق", ltr: false },
+  ];
 
-export default function Page() {
   return (
     <>
-      <PageHead title="إزاي بنشتغل" lead="من غير لف ودوران: 3 خطوات، وكل حاجة واضحة قبل ما تدفع جنيه." />
+      <PageHead title="إزاي بنشتغل" lead={s.get("how.lead")} />
 
       <section className="section container">
         <ol className="steps steps-light">
-          {STEPS.map((s, i) => (
-            <li key={s.title}>
+          {s.howSteps.map((step, i) => (
+            <li key={i}>
               <span className="step-num">{i + 1}</span>
-              <h3>{s.title}</h3>
-              <p>{s.text}</p>
+              <h3>{step.title}</h3>
+              <p>{step.text}</p>
             </li>
           ))}
         </ol>
@@ -62,7 +50,7 @@ export default function Page() {
                 </tr>
               </thead>
               <tbody>
-                {PAYMENT.map((p) => (
+                {payment.map((p) => (
                   <tr key={p.method}>
                     <td>
                       <strong>{p.method}</strong>
@@ -98,7 +86,7 @@ export default function Page() {
         </ul>
 
         <h2>مواعيد الرد</h2>
-        <p>بنرد على كل الرسايل خلال 24 ساعة. ومواعيد العمل {SITE.hours}.</p>
+        <p>بنرد على كل الرسايل خلال 24 ساعة. ومواعيد العمل {s.hours}.</p>
 
         <div className="actions">
           <a className="btn btn-wa" href={whatsappLink()} target="_blank" rel="noopener noreferrer">

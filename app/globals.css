@@ -1135,6 +1135,22 @@ img {
   max-width: 720px;
 }
 
+/* Admin: settings */
+.admin-settings fieldset {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid var(--sand-deep);
+  border-radius: var(--radius);
+}
+
+.admin-settings legend {
+  padding-inline: 8px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
 /* Admin: photos */
 .admin-images-top {
   display: grid;

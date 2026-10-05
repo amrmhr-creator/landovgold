@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import PageHead from "@/components/PageHead";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
-import { BUSINESS, whatsappLink } from "@/lib/site";
+import { getSettings } from "@/lib/settings";
+import { whatsappLink } from "@/lib/site";
 import { sitePhotos } from "@/lib/uploads";
 
 // Photos are picked in the admin panel, so the page is rendered on each visit.
@@ -14,15 +15,9 @@ export const metadata = {
     "حكاية اسم بلاد الدهب، ومين ورا الشركة: ناس من الجنوب بتوفّر تذاكر طيران بأسعار تناسبك وبتنظّم رحلات أسوان والنوبة.",
 };
 
-const VALUES = [
-  { title: "الأصالة", text: "بنقدّم أسوان والنوبة زي ما هي، مش نسخة سياحية." },
-  { title: "الوضوح", text: "السعر والشروط قدامك من الأول، ومفيش مفاجآت." },
-  { title: "البساطة", text: "طلبك بيتحل في رسالة، مش في عشر خطوات." },
-  { title: "الأمانة", text: "لو فيه اختيار أرخص أو أنسب ليك، هنقولك عليه." },
-];
-
 export default async function Page() {
-  const photos = (await sitePhotos()).about;
+  const [photos, s] = await Promise.all([sitePhotos().then((p) => p.about), getSettings()]);
+  const BUSINESS = s.business;
   const official = [
     BUSINESS.legalName,
     BUSINESS.commercialRegister && `سجل تجاري رقم ${BUSINESS.commercialRegister}`,
@@ -33,20 +28,14 @@ export default async function Page() {
     <>
       <PageHead
         title="مين احنا"
-        lead="«بلاد الدهب» هو الاسم اللي اتقال على مصر وأرض النوبة من زمان. واخترناه لأنه بيعبّر عننا: ناس من الجنوب، بتحب البساطة، وبتعامل اللي بيتعامل معاها كأنه ضيف."
+        lead={s.get("about.lead")}
       />
 
       <section className="section container prose">
         <h2>حكايتنا</h2>
-        <p>
-          بلاد الدهب بدأت من حب للجنوب، ومن ملاحظة بسيطة: ناس كتير حوالينا كانت بتدوّر على تذكرة بسعر معقول
-          وبتتوه بين المواقع والأسعار. وناس تانية نفسها تشوف أسوان والنوبة بجد، مش من ورا شباك أوتوبيس سياحي.
-          فقررنا نجمع الاتنين: نوفّر على الناس وقت التدوير، ونوريهم الجنوب زي ما أهله يعرفوه.
-        </p>
-        <p>
-          بدأنا بطلبات من المعارف والأصحاب، وكبرنا بالكلمة الحلوة. النهارده بنخدم المصريين في مصر وبرّها، وكل
-          واحد بيرجعلنا تاني هو أحسن شهادة.
-        </p>
+        {s.aboutStory.map((p) => (
+          <p key={p}>{p}</p>
+        ))}
       </section>
 
       {photos.length > 0 && (
@@ -63,8 +52,8 @@ export default async function Page() {
         <div className="container">
           <h2 className="section-title">بنآمن بإيه</h2>
           <div className="why-grid">
-            {VALUES.map((v) => (
-              <div key={v.title} className="why-item">
+            {s.aboutValues.map((v, i) => (
+              <div key={i} className="why-item">
                 <h3>{v.title}</h3>
                 <p>{v.text}</p>
               </div>

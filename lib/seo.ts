@@ -4,29 +4,30 @@ import type { Article } from "./blog";
 import { AUTHOR } from "./blog";
 import type { FaqGroup } from "./faq";
 import { offerTitle, type Offer } from "./offers";
-import { BUSINESS, SITE, SOCIAL } from "./site";
+import type { SiteSettings } from "./settings";
+import { SITE } from "./site";
 import { tripHref, type Trip } from "./trips";
 
 const ORG_ID = `${SITE.url}/#organization`;
 
-export function organizationLd() {
+export function organizationLd(s: SiteSettings) {
   return {
     "@context": "https://schema.org",
     "@type": "TravelAgency",
     "@id": ORG_ID,
     name: SITE.name,
-    ...(BUSINESS.legalName && { legalName: BUSINESS.legalName }),
-    description: SITE.tagline,
+    ...(s.business.legalName && { legalName: s.business.legalName }),
+    description: s.tagline,
     url: SITE.url,
     logo: `${SITE.url}/logo.png`,
     image: `${SITE.url}/images/hero-nile.webp`,
-    telephone: `+${SITE.whatsappNumber}`,
-    email: SITE.email,
+    telephone: `+${s.whatsappNumber}`,
+    email: s.email,
     areaServed: "EG",
-    ...(BUSINESS.address && {
-      address: { "@type": "PostalAddress", streetAddress: BUSINESS.address, addressCountry: "EG" },
+    ...(s.business.address && {
+      address: { "@type": "PostalAddress", streetAddress: s.business.address, addressCountry: "EG" },
     }),
-    ...(SOCIAL.length > 0 && { sameAs: SOCIAL.map((s) => s.href) }),
+    ...(s.social.length > 0 && { sameAs: s.social.map((link) => link.href) }),
   };
 }
 

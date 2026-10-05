@@ -6,6 +6,7 @@ import { logIn, logOut, requireAdmin } from "@/lib/admin-auth";
 import { AIRPORTS } from "@/lib/airports";
 import { describeError } from "@/lib/db";
 import { createOffer, setOfferAvailable, updateOffer, type OfferInput } from "@/lib/offers-data";
+import { SettingsError, saveSettings } from "@/lib/settings";
 import { isImageName, savePicks, updateAlt } from "@/lib/uploads";
 
 export async function loginAction(formData: FormData) {
@@ -121,4 +122,19 @@ export async function saveImageAltAction(formData: FormData) {
   if (isImageName(name)) await updateAlt(name, String(formData.get("alt") ?? ""));
   revalidatePath("/", "layout");
   redirect("/admin/images");
+}
+
+export type SettingsFormState = { error: string; saved: boolean; values: Record<string, string>; attempt: number };
+
+export async function saveSettingsAction(prev: SettingsFormState, formData: FormData): Promise<SettingsFormState> {
+  await requireAdmin();
+  const values = Object.fromEntries([...formData.entries()].map(([k, v]) => [k, String(v)]));
+  try {
+    await saveSettings(values);
+  } catch (err) {
+    if (err instanceof SettingsError) return { error: err.message, saved: false, values, attempt: prev.attempt + 1 };
+    throw err;
+  }
+  revalidatePath("/", "layout");
+  return { error: "", saved: true, values, attempt: prev.attempt + 1 };
 }

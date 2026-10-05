@@ -1,14 +1,15 @@
 import Link from "next/link";
 import ContactLine from "@/components/ContactLine";
 import PageHead from "@/components/PageHead";
-import { BUSINESS } from "@/lib/site";
+import { getSettings } from "@/lib/settings";
 
 export const metadata = {
   title: "الشروط والأحكام",
   description: "الشروط اللي بتنظّم الحجز والدفع والتعامل مع بلاد الدهب في تذاكر الطيران ورحلات أسوان والنوبة.",
 };
 
-export default function Page() {
+export default async function Page() {
+  const BUSINESS = (await getSettings()).business;
   const registered = [
     BUSINESS.legalName,
     BUSINESS.commercialRegister && `سجل تجاري رقم ${BUSINESS.commercialRegister}`,
