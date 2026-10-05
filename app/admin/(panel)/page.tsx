@@ -48,6 +48,9 @@ export default async function Page() {
         <Link className="btn btn-outline" href="/admin/leads">
           شوف الطلبات
         </Link>
+        <Link className="btn btn-outline" href="/admin/guide">
+          دليل الاستخدام
+        </Link>
       </div>
     </>
   );

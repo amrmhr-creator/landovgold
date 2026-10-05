@@ -977,6 +977,26 @@ img {
   color: var(--gold);
 }
 
+/* Phones: the menu is one row you swipe sideways, under the title and the logout button. */
+@media (max-width: 720px) {
+  .admin-bar-inner {
+    padding-block: 10px;
+  }
+
+  .admin-bar nav {
+    order: 3;
+    flex: 1 0 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    white-space: nowrap;
+  }
+
+  .admin-bar form {
+    margin-inline-start: auto;
+  }
+}
+
 .admin-logout {
   padding: 4px 14px;
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -1309,6 +1329,23 @@ img {
 .admin-seo summary {
   font-weight: 600;
   cursor: pointer;
+}
+
+.admin-guide {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  margin-block: 16px;
+}
+
+.admin-guide h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.admin-guide ul {
+  margin: 0;
+  padding-inline-start: 18px;
 }
 
 /* Admin: photos */

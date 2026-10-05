@@ -18,6 +18,7 @@ const NAV = [
   { href: "/admin/trash", label: "السلة" },
   { href: "/admin/backups", label: "النسخ الاحتياطية" },
   { href: "/admin/account", label: "حسابي" },
+  { href: "/admin/guide", label: "الدليل" },
 ];
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
