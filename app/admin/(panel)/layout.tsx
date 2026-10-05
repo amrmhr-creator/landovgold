@@ -10,6 +10,7 @@ const NAV = [
   { href: "/admin/leads", label: "الطلبات" },
   { href: "/admin/offers", label: "العروض" },
   { href: "/admin/trips", label: "الرحلات" },
+  { href: "/admin/faq", label: "الأسئلة" },
   { href: "/admin/images", label: "الصور" },
   { href: "/admin/settings", label: "الإعدادات" },
   { href: "/admin/account", label: "حسابي" },

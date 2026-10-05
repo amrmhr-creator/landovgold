@@ -2,7 +2,7 @@ import FaqList from "@/components/FaqList";
 import JsonLd from "@/components/JsonLd";
 import PageHead from "@/components/PageHead";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
-import { FAQ } from "@/lib/faq";
+import { visibleFaq } from "@/lib/faq-data";
 import { faqLd } from "@/lib/seo";
 import { whatsappLink } from "@/lib/site";
 
@@ -11,13 +11,14 @@ export const metadata = {
   description: "إجابات عن حجز تذاكر الطيران، ورحلات أسوان والنوبة، والدفع من مصر ومن برّه، والإلغاء والاسترداد.",
 };
 
-export default function Page() {
+export default async function Page() {
+  const faq = await visibleFaq();
   return (
     <>
-      <JsonLd data={faqLd(FAQ)} />
+      <JsonLd data={faqLd(faq)} />
       <PageHead title="الأسئلة الشائعة" lead="أسئلة وأجوبة عن الحجز والدفع والرحلات." />
       <section className="section container prose">
-        <FaqList groups={FAQ} />
+        <FaqList groups={faq} />
 
         <div className="center more-link">
           <p className="muted">سؤالك مش موجود؟</p>

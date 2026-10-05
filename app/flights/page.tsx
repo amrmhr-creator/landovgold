@@ -4,7 +4,7 @@ import LeadForm from "@/components/LeadForm";
 import OfferCard from "@/components/OfferCard";
 import PageHead from "@/components/PageHead";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
-import { sectionFaq } from "@/lib/faq";
+import { sectionFaq } from "@/lib/faq-data";
 import { bookableOffers } from "@/lib/offers-data";
 import { SECTIONS } from "@/lib/sections";
 import { offerTitle } from "@/lib/offers";
@@ -23,7 +23,7 @@ export const metadata = {
 
 export default async function FlightsPage() {
   const [offers, photos] = await Promise.all([bookableOffers(), sitePhotos()]);
-  const faq = sectionFaq("flights");
+  const faq = await sectionFaq("flights");
 
   return (
     <>

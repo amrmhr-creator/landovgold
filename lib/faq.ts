@@ -1,4 +1,5 @@
-// FAQ content (from CONTENT.md). Also feeds the FAQPage structured data.
+// The starting FAQ (from CONTENT.md). The owner edits questions from /admin/faq
+// (lib/faq-data.ts); these are shown until his first save. Also feeds the FAQPage structured data.
 // Groups tied to a section also show on that section's page; the rest are general.
 
 import type { SectionKey } from "./sections";
@@ -81,6 +82,3 @@ export const FAQ: FaqGroup[] = [
   },
 ];
 
-export function sectionFaq(section: SectionKey) {
-  return FAQ.filter((g) => g.section === section);
-}

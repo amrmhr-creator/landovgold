@@ -1179,6 +1179,36 @@ img {
   justify-self: start;
 }
 
+/* Admin: FAQ */
+.admin-faq-group {
+  margin-bottom: 32px;
+}
+
+.admin-faq-body {
+  display: grid;
+  gap: 12px;
+  padding: 0 18px 16px;
+}
+
+.admin-faq-form {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-faq-form input[name="q"],
+.admin-faq-form textarea {
+  width: 100%;
+  padding: 8px;
+}
+
+.faq-item.is-hidden summary {
+  opacity: 0.6;
+}
+
+.admin-faq-new summary {
+  color: var(--gold-dark);
+}
+
 /* Admin: photos */
 .admin-images-top {
   display: grid;

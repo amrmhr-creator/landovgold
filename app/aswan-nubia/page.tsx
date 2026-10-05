@@ -6,7 +6,7 @@ import LeadForm from "@/components/LeadForm";
 import PageHead from "@/components/PageHead";
 import TripTerms from "@/components/TripTerms";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
-import { sectionFaq } from "@/lib/faq";
+import { sectionFaq } from "@/lib/faq-data";
 import { formatPrice } from "@/lib/offers";
 import { SECTIONS } from "@/lib/sections";
 import { faqLd, tripLd } from "@/lib/seo";
@@ -32,7 +32,7 @@ const GALLERY = [
 ];
 
 export default async function Page() {
-  const faq = sectionFaq("aswan");
+  const faq = await sectionFaq("aswan");
   const photos = await sitePhotos();
   const trips = await visibleTrips();
   const gallery = photos.gallery.length > 0 ? photos.gallery : GALLERY;

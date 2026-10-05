@@ -6,6 +6,7 @@ import { RESET_LINK_MINUTES, createResetToken, passwordProblem, resetPassword, s
 import { checkPassword, logIn, logOut, requireAdmin, startSession } from "@/lib/admin-auth";
 import { AIRPORTS } from "@/lib/airports";
 import { describeError } from "@/lib/db";
+import { isGroupKey, moveQuestion, saveQuestion } from "@/lib/faq-data";
 import { escapeHtml, mailConfigured, sendMail } from "@/lib/mail";
 import { createOffer, setOfferAvailable, updateOffer, type OfferInput } from "@/lib/offers-data";
 import { SettingsError, saveSettings } from "@/lib/settings";
@@ -262,4 +263,23 @@ export async function toggleTripAction(formData: FormData) {
   await setTripHidden(String(formData.get("slug") ?? ""), formData.get("hide") === "1");
   revalidatePath("/", "layout");
   redirect("/admin/trips");
+}
+
+export async function saveQuestionAction(formData: FormData) {
+  await requireAdmin();
+  const id = text(formData, "id", 20) || null;
+  const group = text(formData, "group", 20);
+  const q = text(formData, "q", 300);
+  const a = text(formData, "a", 3000);
+  if (!isGroupKey(group) || !q || !a) redirect("/admin/faq?error=1");
+  await saveQuestion(id, { group, q, a, hidden: formData.get("visible") !== "on" });
+  revalidatePath("/", "layout");
+  redirect(`/admin/faq?saved=1#${group}`);
+}
+
+export async function moveQuestionAction(formData: FormData) {
+  await requireAdmin();
+  await moveQuestion(text(formData, "id", 20), formData.get("dir") === "up" ? -1 : 1);
+  revalidatePath("/", "layout");
+  redirect(`/admin/faq#${text(formData, "group", 20)}`);
 }
