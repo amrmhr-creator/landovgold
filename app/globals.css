@@ -1267,6 +1267,33 @@ img {
   border-color: #e3b5b5;
 }
 
+.preview-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--gold);
+  color: var(--navy-deep);
+  padding-block: 10px;
+}
+
+.preview-bar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+}
+
+.preview-bar-links {
+  display: flex;
+  gap: 16px;
+  margin-inline-start: auto;
+}
+
+.preview-bar a {
+  color: inherit;
+  font-weight: 700;
+}
+
 /* Admin: photos */
 .admin-images-top {
   display: grid;

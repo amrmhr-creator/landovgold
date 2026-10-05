@@ -65,6 +65,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ s
                 <Link className="btn btn-outline btn-sm" href={`/admin/trips/${t.slug}`}>
                   تعديل
                 </Link>
+                <Link className="btn btn-outline btn-sm" href={`/admin/preview/trip/${t.slug}`}>
+                  معاينة
+                </Link>
                 <form action={toggleTripAction}>
                   <input type="hidden" name="slug" value={t.slug} />
                   <input type="hidden" name="hide" value={t.hidden ? "0" : "1"} />

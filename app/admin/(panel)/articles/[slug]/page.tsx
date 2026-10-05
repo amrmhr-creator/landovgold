@@ -28,7 +28,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         </a>{" "}
         <CopyButton text={link} />
       </p>
-      <p className="muted small">تاريخ &quot;آخر تحديث&quot; بيتغيّر لوحده لما تحفظ.</p>
+      <p className="muted small">
+        تاريخ &quot;آخر تحديث&quot; بيتغيّر لوحده لما تحفظ. عايز تشوف شكله قبل ما الناس تشوفه؟ شيل علامة &quot;ظاهر&quot;، واحفظ،
+        وبعدين <Link href={`/admin/preview/article/${article.slug}`}>دوس معاينة</Link>.
+      </p>
       <ArticleForm
         initial={{
           slug: article.slug,

@@ -99,3 +99,9 @@ export async function restoreTrip(data: { trip: StoredTrip; photo: string }) {
   await writeJsonFile(tripsFile(), trips);
   if (data.photo) await setTripPhoto(data.trip.slug, data.photo);
 }
+
+/** Any trip, hidden ones too, with its picked photo (admin preview). */
+export async function previewTrip(slug: string) {
+  const [trip, photos] = await Promise.all([tripForAdmin(slug), sitePhotos()]);
+  return trip && { ...trip, image: photos.trip(trip.slug, trip.image.alt) ?? trip.image };
+}

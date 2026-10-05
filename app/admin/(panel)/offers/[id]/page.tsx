@@ -38,7 +38,10 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         </a>{" "}
         <CopyButton text={link} />
       </p>
-      <p className="muted small">اللينك ثابت ومش بيتغير مع التعديل، فالبوستات القديمة هتفضل شغالة.</p>
+      <p className="muted small">
+        اللينك ثابت ومش بيتغير مع التعديل، فالبوستات القديمة هتفضل شغالة.{" "}
+        <Link href={`/admin/preview/offer/${offer.slug}`}>معاينة العرض</Link>.
+      </p>
       <OfferForm
         initial={{
           id: String(offer.id),

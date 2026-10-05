@@ -29,7 +29,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         </a>{" "}
         <CopyButton text={link} />
       </p>
-      <p className="muted small">اللينك ثابت ومش بيتغير مع التعديل.</p>
+      <p className="muted small">
+        اللينك ثابت ومش بيتغير مع التعديل. عايز تشوف شكلها قبل ما الناس تشوفها؟ شيل علامة &quot;ظاهرة&quot;، واحفظ، وبعدين{" "}
+        <Link href={`/admin/preview/trip/${trip.slug}`}>دوس معاينة</Link>.
+      </p>
       <TripForm
         initial={{
           slug: trip.slug,
