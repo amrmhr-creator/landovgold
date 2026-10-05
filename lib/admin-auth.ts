@@ -2,24 +2,42 @@ import "server-only";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { ownerAccount, verifyPassword } from "./admin-accounts";
 import { dbConfigured, describeError, query } from "./db";
 
-// Admin panel login. The password is ADMIN_PASSWORD in hPanel (never in git); without it
-// the panel stays locked. The session is a signed cookie; changing the password logs everyone out.
+// Admin panel login. The password is the one the owner set in the panel (lib/admin-accounts.ts),
+// or ADMIN_PASSWORD from hPanel until he sets one; with neither, the panel stays locked.
+// The session is a signed cookie; changing the password logs everyone out.
 
 const COOKIE = "admin_session";
 const SESSION_DAYS = 7;
 
-export function adminEnabled() {
-  return (process.env.ADMIN_PASSWORD ?? "").length >= 8;
+const envPassword = () => process.env.ADMIN_PASSWORD ?? "";
+
+/** The owner's own password hash, once he has set one in the panel. */
+async function ownHash() {
+  return (await ownerAccount())?.passwordHash || null;
 }
 
-function signingKey() {
-  return createHash("sha256").update(`admin-session:${process.env.ADMIN_PASSWORD}`).digest();
+export async function adminEnabled() {
+  return !!(await ownHash()) || envPassword().length >= 8;
 }
 
-function sign(expires: number) {
-  return createHmac("sha256", signingKey()).update(String(expires)).digest("base64url");
+/** Sessions are signed with a key tied to the current password, so changing it logs everyone out. */
+async function signingKey() {
+  const secret = (await ownHash()) ?? envPassword();
+  return createHash("sha256").update(`admin-session:${secret}`).digest();
+}
+
+async function sign(expires: number) {
+  return createHmac("sha256", await signingKey()).update(String(expires)).digest("base64url");
+}
+
+/** Whether `password` is the current admin password. */
+export async function checkPassword(password: string) {
+  const hash = await ownHash();
+  if (hash) return verifyPassword(password, hash);
+  return envPassword().length >= 8 && safeEqual(password, envPassword());
 }
 
 function safeEqual(a: string, b: string) {
@@ -30,13 +48,13 @@ function safeEqual(a: string, b: string) {
 }
 
 export async function isAdmin() {
-  if (!adminEnabled()) return false;
+  if (!(await adminEnabled())) return false;
   const value = (await cookies()).get(COOKIE)?.value;
   if (!value) return false;
   const [exp, sig] = value.split(".");
   const expires = Number(exp);
   if (!Number.isFinite(expires) || expires < Date.now() || !sig) return false;
-  return safeEqual(sig, sign(expires));
+  return safeEqual(sig, await sign(expires));
 }
 
 /** For admin pages and actions: sends anyone not logged in to the login page. */
@@ -118,29 +136,31 @@ async function clientIp() {
 
 /** Checks the password and starts a session. Returns an error message, or null on success. */
 export async function logIn(password: string): Promise<string | null> {
-  if (!adminEnabled()) return "لوحة التحكم مقفولة: لازم ADMIN_PASSWORD يتحط في hPanel الأول.";
+  if (!(await adminEnabled())) return "لوحة التحكم مقفولة: لازم ADMIN_PASSWORD يتحط في hPanel الأول.";
   const ip = await clientIp();
   const { mine, total } = await recentFailures(ip);
   if (mine >= FAIL_LIMIT || total >= FAIL_LIMIT_ALL) return "محاولات كتير غلط. استنى ربع ساعة وجرّب تاني.";
 
-  if (!safeEqual(password, process.env.ADMIN_PASSWORD!)) {
+  if (!(await checkPassword(password))) {
     await recordFailure(ip);
     console.warn(`[admin] pid ${process.pid}: wrong password from ${ip}`);
     return "الباسورد غلط.";
   }
   await clearFailures(ip);
+  await startSession();
+  return null;
+}
 
-  const now = Date.now();
-
-  const expires = now + SESSION_DAYS * 86_400_000;
-  (await cookies()).set(COOKIE, `${expires}.${sign(expires)}`, {
+/** Logs this browser in (after a correct password, a password change, or a reset). */
+export async function startSession() {
+  const expires = Date.now() + SESSION_DAYS * 86_400_000;
+  (await cookies()).set(COOKIE, `${expires}.${await sign(expires)}`, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/admin",
     expires: new Date(expires),
   });
-  return null;
 }
 
 export async function logOut() {

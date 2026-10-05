@@ -2,11 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { logIn, logOut, requireAdmin } from "@/lib/admin-auth";
+import { RESET_LINK_MINUTES, createResetToken, passwordProblem, resetPassword, setOwnerPassword } from "@/lib/admin-accounts";
+import { checkPassword, logIn, logOut, requireAdmin, startSession } from "@/lib/admin-auth";
 import { AIRPORTS } from "@/lib/airports";
 import { describeError } from "@/lib/db";
+import { escapeHtml, mailConfigured, sendMail } from "@/lib/mail";
 import { createOffer, setOfferAvailable, updateOffer, type OfferInput } from "@/lib/offers-data";
 import { SettingsError, saveSettings } from "@/lib/settings";
+import { SITE } from "@/lib/site";
 import { isImageName, savePicks, updateAlt } from "@/lib/uploads";
 
 export async function loginAction(formData: FormData) {
@@ -137,4 +140,64 @@ export async function saveSettingsAction(prev: SettingsFormState, formData: Form
   }
   revalidatePath("/", "layout");
   return { error: "", saved: true, values, attempt: prev.attempt + 1 };
+}
+
+export type PasswordFormState = { error: string; done: boolean };
+
+/** Changing the password from "حسابي": needs the current one. */
+export async function changePasswordAction(_prev: PasswordFormState, formData: FormData): Promise<PasswordFormState> {
+  await requireAdmin();
+  const current = String(formData.get("current") ?? "");
+  const password = String(formData.get("password") ?? "");
+  if (!(await checkPassword(current))) return { error: "الباسورد الحالي غلط.", done: false };
+  const problem = passwordProblem(password, String(formData.get("confirm") ?? ""));
+  if (problem) return { error: problem, done: false };
+  await setOwnerPassword(password);
+  // The session key follows the password, so this browser needs a new session; others are logged out.
+  await startSession();
+  return { error: "", done: true };
+}
+
+/** "نسيت الباسورد": emails a one-time link to ADMIN_EMAIL (the owner's personal email). */
+export async function requestResetAction(_prev: PasswordFormState, _formData: FormData): Promise<PasswordFormState> {
+  const to = process.env.ADMIN_EMAIL?.trim();
+  if (!to) return { error: "استرجاع الباسورد مش متفعّل لسه: لازم ADMIN_EMAIL يتحط في hPanel.", done: false };
+  const devNoMail = process.env.NODE_ENV !== "production" && !mailConfigured();
+  if (!devNoMail && !mailConfigured()) return { error: "الإيميل مش متظبط على السيرفر، فمش هنقدر نبعت اللينك.", done: false };
+
+  const token = await createResetToken();
+  if (!token) return { error: "اتبعتلك لينك من شوية. استنى 5 دقايق قبل ما تطلب واحد تاني.", done: false };
+  // The live site always links to its own address, never to the Host header a request claims.
+  const base = process.env.NODE_ENV === "production" ? SITE.url : `http://localhost:${process.env.PORT || 3000}`;
+  const link = `${base}/admin/reset?token=${token}`;
+
+  if (devNoMail) {
+    console.log(`[admin] reset link (local test, no SMTP): ${link}`);
+    return { error: "", done: true };
+  }
+  try {
+    await sendMail({
+      to,
+      subject: `${SITE.name}: لينك تغيير باسورد لوحة التحكم`,
+      text: `حد طلب تغيير باسورد لوحة التحكم. لو ده إنت، افتح اللينك ده خلال ${RESET_LINK_MINUTES} دقيقة:\n${link}\n\nلو مش إنت، تجاهل الرسالة دي، والباسورد مش هيتغيّر.`,
+      html: `<div dir="rtl" style="font-family:sans-serif"><p>حد طلب تغيير باسورد لوحة التحكم. لو ده إنت، افتح اللينك ده خلال ${RESET_LINK_MINUTES} دقيقة:</p><p><a href="${escapeHtml(link)}">غيّر الباسورد</a></p><p>لو مش إنت، تجاهل الرسالة دي، والباسورد مش هيتغيّر.</p></div>`,
+    });
+  } catch (err) {
+    console.error(`[admin] pid ${process.pid}: reset email failed:`, err);
+    return { error: "حصلت مشكلة في إرسال الإيميل. جرّب تاني بعد 5 دقايق.", done: false };
+  }
+  return { error: "", done: true };
+}
+
+/** The page the emailed link opens: sets the new password and logs in. */
+export async function resetPasswordAction(_prev: PasswordFormState, formData: FormData): Promise<PasswordFormState> {
+  const token = String(formData.get("token") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const problem = passwordProblem(password, String(formData.get("confirm") ?? ""));
+  if (problem) return { error: problem, done: false };
+  if (!(await resetPassword(token, password))) {
+    return { error: "اللينك ده انتهى أو اتستخدم قبل كده. اطلب لينك جديد.", done: false };
+  }
+  await startSession();
+  redirect("/admin?password=changed");
 }

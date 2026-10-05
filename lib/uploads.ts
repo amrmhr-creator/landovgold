@@ -1,7 +1,8 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { writeJsonFile } from "./json-file";
 
 // Photos uploaded from the admin panel. They live outside the app folder (UPLOAD_DIR, or a
 // "landovgold-uploads" folder next to it) so a new deploy never wipes them, and are served
@@ -58,11 +59,7 @@ async function readLibrary(): Promise<Library> {
 }
 
 async function writeLibrary(lib: Library) {
-  await mkdir(uploadDir(), { recursive: true });
-  // Write to a temp file and rename it, so a reader never sees a half-written file.
-  const tmp = `${libraryFile()}.${process.pid}.tmp`;
-  await writeFile(tmp, JSON.stringify(lib, null, 2));
-  await rename(tmp, libraryFile());
+  await writeJsonFile(libraryFile(), lib);
 }
 
 /** Newest first. */

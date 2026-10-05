@@ -1,6 +1,7 @@
 import "server-only";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { writeJsonFile } from "./json-file";
 import { BUSINESS, SITE } from "./site";
 import { uploadDir } from "./uploads";
 
@@ -194,8 +195,5 @@ export async function saveSettings(input: Record<string, string>) {
     }
   }
 
-  await mkdir(uploadDir(), { recursive: true });
-  const tmp = `${settingsFile()}.${process.pid}.tmp`;
-  await writeFile(tmp, JSON.stringify(out, null, 2));
-  await rename(tmp, settingsFile());
+  await writeJsonFile(settingsFile(), out);
 }

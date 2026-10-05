@@ -1,7 +1,7 @@
 import "server-only";
-import nodemailer from "nodemailer";
 import { dbConfigured, describeError, query } from "./db";
 import { LEAD_SECTION_LABEL, type LeadSection } from "./lead-options";
+import { escapeHtml, sendMail } from "./mail";
 import { formatDate } from "./offers";
 import { SITE } from "./site";
 
@@ -161,11 +161,7 @@ export async function listLeads(filter: { section?: LeadSection; marketingOnly?:
 }
 
 // ---------- Email ----------
-// Configure with SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD. Sent to LEADS_EMAIL (default book@landovgold.com).
-
-function escapeHtml(s: string) {
-  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
-}
+// Sent to LEADS_EMAIL (default book@landovgold.com) through lib/mail.ts.
 
 export const KIND_LABEL: Record<Lead["kind"], string> = {
   offer: "العرض",
@@ -175,22 +171,6 @@ export const KIND_LABEL: Record<Lead["kind"], string> = {
 };
 
 async function emailLead(lead: Lead) {
-  const { SMTP_HOST, SMTP_USER, SMTP_PASSWORD } = process.env;
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASSWORD) {
-    console.error(`[leads] pid ${process.pid}: email skipped: SMTP_HOST, SMTP_USER or SMTP_PASSWORD is not set`);
-    return false;
-  }
-  const port = Number(process.env.SMTP_PORT || 465);
-  const transport = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port,
-    secure: port === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASSWORD },
-    // Fail within seconds (and get it logged) instead of hanging the request for minutes.
-    connectionTimeout: 10_000,
-    greetingTimeout: 10_000,
-    socketTimeout: 20_000,
-  });
   const rows = [
     ["القسم", LEAD_SECTION_LABEL[lead.section]],
     ["الاسم", lead.name],
@@ -202,8 +182,7 @@ async function emailLead(lead: Lead) {
     ["موافق على العروض", lead.marketingOk ? "أيوه" : "لأ"],
     ["الصفحة", lead.page ?? "-"],
   ];
-  await transport.sendMail({
-    from: `"${SITE.name} - الموقع" <${SMTP_USER}>`,
+  return sendMail({
     to: process.env.LEADS_EMAIL || SITE.email,
     // The section leads the subject, so the inbox can be sorted or filtered by it.
     subject: `[${LEAD_SECTION_LABEL[lead.section]}] طلب جديد: ${lead.destination} - ${lead.name}`,
@@ -212,7 +191,6 @@ async function emailLead(lead: Lead) {
       .map(([k, v]) => `<p><b>${k}:</b> ${escapeHtml(v)}</p>`)
       .join("")}</div>`,
   });
-  return true;
 }
 
 /** Saves and emails the lead. Succeeds if at least one channel stored it. */

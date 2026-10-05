@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { adminEnabled, isAdmin } from "@/lib/admin-auth";
 import { SITE } from "@/lib/site";
@@ -15,7 +16,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
     <section className="admin-login">
       <Image src="/logo.png" alt={SITE.name} width={91} height={80} />
       <h1>لوحة التحكم</h1>
-      {!adminEnabled() ? (
+      {!(await adminEnabled()) ? (
         <p className="notice">
           اللوحة مقفولة لحد ما يتحط باسورد في hPanel: Environment variables ← <code dir="ltr">ADMIN_PASSWORD</code> (8 حروف
           على الأقل)، وبعدها build جديد.
@@ -35,6 +36,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
             دخول
           </button>
         </form>
+      )}
+      {(await adminEnabled()) && (
+        <p>
+          <Link href="/admin/forgot">نسيت الباسورد؟</Link>
+        </p>
       )}
     </section>
   );
