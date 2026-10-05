@@ -24,17 +24,23 @@ async function ensureOffersTable() {
       baggage VARCHAR(100) NOT NULL,
       extras TEXT NULL,
       available TINYINT(1) NOT NULL DEFAULT 1,
+      image VARCHAR(40) NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
+  // Columns added after the table was first made on the live site.
+  const cols = await query<{ COLUMN_NAME: string }[]>(
+    "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'offers'",
+  );
+  if (!cols.some((c) => c.COLUMN_NAME === "image")) await query("ALTER TABLE offers ADD COLUMN image VARCHAR(40) NULL AFTER available");
   const [{ n }] = await query<{ n: number }[]>("SELECT COUNT(*) AS n FROM offers");
   if (Number(n) === 0) {
     // INSERT IGNORE: several app processes may get here at once; the unique slug keeps one copy.
     for (const o of SAMPLE_OFFERS) {
       await query(
-        `INSERT IGNORE INTO offers (slug, from_city, to_city, price, trip_type, travel_date, airline, transit, baggage, extras, available)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT IGNORE INTO offers (slug, from_city, to_city, price, trip_type, travel_date, airline, transit, baggage, extras, available, image)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [o.slug, ...columns(o)],
       );
     }
@@ -60,6 +66,7 @@ function toOffer(r: Record<string, unknown>): Offer {
     baggage: String(r.baggage),
     extras: extras.length ? extras : undefined,
     available: Number(r.available) === 1,
+    image: r.image ? String(r.image) : undefined,
   };
 }
 
@@ -100,7 +107,7 @@ export async function getOfferById(id: number) {
 export type OfferInput = Omit<Offer, "id" | "slug">;
 
 function columns(o: OfferInput) {
-  return [o.from, o.to, o.price, o.tripType, o.date, o.airline, o.transit, o.baggage, (o.extras ?? []).join("\n"), o.available ? 1 : 0];
+  return [o.from, o.to, o.price, o.tripType, o.date, o.airline, o.transit, o.baggage, (o.extras ?? []).join("\n"), o.available ? 1 : 0, o.image ?? null];
 }
 
 /** Adds an offer under `slug`, or `slug-2`, `slug-3`… if that's taken. Returns the slug used. */
@@ -110,8 +117,8 @@ export async function createOffer(o: OfferInput, slug: string) {
     const candidate = n === 1 ? slug : `${slug}-${n}`;
     try {
       await query(
-        `INSERT INTO offers (slug, from_city, to_city, price, trip_type, travel_date, airline, transit, baggage, extras, available)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO offers (slug, from_city, to_city, price, trip_type, travel_date, airline, transit, baggage, extras, available, image)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [candidate, ...columns(o)],
       );
       return candidate;
@@ -127,7 +134,7 @@ export async function updateOffer(id: number, o: OfferInput) {
   await ensureOffersTable();
   await query(
     `UPDATE offers SET from_city = ?, to_city = ?, price = ?, trip_type = ?, travel_date = ?, airline = ?,
-       transit = ?, baggage = ?, extras = ?, available = ? WHERE id = ?`,
+       transit = ?, baggage = ?, extras = ?, available = ?, image = ? WHERE id = ?`,
     [...columns(o), id],
   );
 }

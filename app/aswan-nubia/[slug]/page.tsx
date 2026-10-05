@@ -10,6 +10,7 @@ import { formatPrice } from "@/lib/offers";
 import { tripLd } from "@/lib/seo";
 import { whatsappLink } from "@/lib/site";
 import { ASK_TRIP_PRICE, TRIPS, getTrip } from "@/lib/trips";
+import { sitePhotos } from "@/lib/uploads";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -18,9 +19,19 @@ export function generateStaticParams() {
 }
 
 export const dynamicParams = false;
+// Photos are picked in the admin panel, so pages are rendered on each visit.
+export const dynamic = "force-dynamic";
+
+/** The trip with the photo picked in the admin panel, if any. */
+async function tripWithPhoto(slug: string) {
+  const trip = getTrip(slug);
+  if (!trip) return undefined;
+  const photo = (await sitePhotos()).trip(trip.slug, trip.image.alt);
+  return photo ? { ...trip, image: photo } : trip;
+}
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const trip = getTrip((await params).slug);
+  const trip = await tripWithPhoto((await params).slug);
   if (!trip) return {};
   const title = `${trip.title}: البرنامج يوم بيوم`;
   const description =
@@ -31,7 +42,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 export default async function TripPage({ params }: Params) {
-  const trip = getTrip((await params).slug);
+  const trip = await tripWithPhoto((await params).slug);
   if (!trip) notFound();
 
   return (

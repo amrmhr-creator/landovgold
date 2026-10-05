@@ -7,8 +7,10 @@ import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { sectionFaq } from "@/lib/faq";
 import { bookableOffers } from "@/lib/offers-data";
 import { SECTIONS } from "@/lib/sections";
+import { offerTitle } from "@/lib/offers";
 import { faqLd } from "@/lib/seo";
 import { whatsappLink } from "@/lib/site";
+import { sitePhotos } from "@/lib/uploads";
 
 // Offers come from the database, so the page is rendered on each visit.
 export const dynamic = "force-dynamic";
@@ -20,7 +22,7 @@ export const metadata = {
 };
 
 export default async function FlightsPage() {
-  const offers = await bookableOffers();
+  const [offers, photos] = await Promise.all([bookableOffers(), sitePhotos()]);
   const faq = sectionFaq("flights");
 
   return (
@@ -36,7 +38,7 @@ export default async function FlightsPage() {
         {offers.length > 0 ? (
           <div className="grid-3">
             {offers.map((o) => (
-              <OfferCard key={o.slug} offer={o} />
+              <OfferCard key={o.slug} offer={o} photo={photos.byName(o.image, offerTitle(o))} />
             ))}
           </div>
         ) : (

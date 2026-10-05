@@ -6,6 +6,7 @@ import { AIRPORTS, airportLabel } from "@/lib/airports";
 import { dbConfigured } from "@/lib/db";
 import { getOfferById } from "@/lib/offers-data";
 import { SITE } from "@/lib/site";
+import { listImages, smallUrl } from "@/lib/uploads";
 import OfferForm from "../OfferForm";
 
 export const metadata = { title: "تعديل عرض" };
@@ -23,6 +24,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const offer = await getOfferById(id);
   if (!offer) notFound();
   const link = `${SITE.url}/flights/${offer.slug}`;
+  const images = (await listImages()).map((i) => ({ name: i.name, alt: i.alt, small: smallUrl(i.name) }));
 
   return (
     <>
@@ -51,7 +53,9 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           baggage: offer.baggage,
           extras: (offer.extras ?? []).join("\n"),
           available: offer.available ? "on" : "off",
+          image: offer.image ?? "",
         }}
+        images={images}
       />
     </>
   );

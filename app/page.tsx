@@ -4,11 +4,12 @@ import LeadForm from "@/components/LeadForm";
 import NubianStrip from "@/components/NubianStrip";
 import OfferCard from "@/components/OfferCard";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
-import { formatPrice } from "@/lib/offers";
+import { formatPrice, offerTitle } from "@/lib/offers";
 import { bookableOffers } from "@/lib/offers-data";
 import { SECTIONS } from "@/lib/sections";
 import { SITE, whatsappLink } from "@/lib/site";
 import { ASK_TRIP_PRICE, TRIPS, tripHref } from "@/lib/trips";
+import { sitePhotos } from "@/lib/uploads";
 
 // Offers come from the database, so the page is rendered on each visit.
 export const dynamic = "force-dynamic";
@@ -29,6 +30,8 @@ const WHY = [
 export default async function HomePage() {
   const latestOffers = (await bookableOffers()).slice(0, 3);
   const { flights, aswan } = SECTIONS;
+  const photos = await sitePhotos();
+  const trips = TRIPS.map((t) => ({ ...t, image: photos.trip(t.slug, t.image.alt) ?? t.image }));
 
   return (
     <>
@@ -55,7 +58,7 @@ export default async function HomePage() {
         {latestOffers.length > 0 ? (
           <div className="grid-3">
             {latestOffers.map((o) => (
-              <OfferCard key={o.slug} offer={o} />
+              <OfferCard key={o.slug} offer={o} photo={photos.byName(o.image, offerTitle(o))} />
             ))}
           </div>
         ) : (
@@ -77,7 +80,7 @@ export default async function HomePage() {
         <h2 className="section-title">{aswan.title}</h2>
         <p className="section-sub">أسوان والنوبة: برامج جاهزة في موسم الشتا، وكل حاجة مترتبة.</p>
         <div className="grid-2">
-          {TRIPS.map((t) => (
+          {trips.map((t) => (
             <Link key={t.slug} href={tripHref(t)} className="card mini-trip">
               <Image src={t.image.src} alt="" width={1400} height={933} sizes="(min-width: 720px) 45vw, 100vw" />
               <div>

@@ -9,6 +9,7 @@ const NAV = [
   { href: "/admin", label: "الرئيسية" },
   { href: "/admin/leads", label: "الطلبات" },
   { href: "/admin/offers", label: "العروض" },
+  { href: "/admin/images", label: "الصور" },
 ];
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
@@ -38,7 +39,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
       <div className="container admin-body">
         {!dbConfigured() && (
           <p className="notice">
-            قاعدة البيانات مش متوصلة هنا (DB_HOST و DB_USER و DB_NAME مش موجودين)، فمفيش حاجة تتحفظ أو تتعرض.
+            قاعدة البيانات مش متوصلة هنا (DB_HOST و DB_USER و DB_NAME مش موجودين)، فالطلبات والعروض مش بتتحفظ ولا بتتعرض. الصور بتشتغل عادي.
           </p>
         )}
         {children}

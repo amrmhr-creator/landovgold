@@ -12,6 +12,10 @@ import { SECTIONS } from "@/lib/sections";
 import { faqLd, tripLd } from "@/lib/seo";
 import { whatsappLink } from "@/lib/site";
 import { ASK_TRIP_PRICE, TRIPS, tripHref } from "@/lib/trips";
+import { sitePhotos } from "@/lib/uploads";
+
+// Photos are picked in the admin panel, so the page is rendered on each visit.
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "رحلات أسوان والنوبة",
@@ -26,12 +30,15 @@ const GALLERY = [
   { src: "/images/gallery/houses-2.webp", alt: "بيوت ملوّنة" },
 ];
 
-export default function Page() {
+export default async function Page() {
   const faq = sectionFaq("aswan");
+  const photos = await sitePhotos();
+  const trips = TRIPS.map((t) => ({ ...t, image: photos.trip(t.slug, t.image.alt) ?? t.image }));
+  const gallery = photos.gallery.length > 0 ? photos.gallery : GALLERY;
 
   return (
     <>
-      {TRIPS.map((t) => (
+      {trips.map((t) => (
         <JsonLd key={t.slug} data={tripLd(t)} />
       ))}
       <JsonLd data={faqLd(faq)} />
@@ -43,7 +50,7 @@ export default function Page() {
 
       <section className="section container">
         <div className="trips">
-          {TRIPS.map((trip) => (
+          {trips.map((trip) => (
             <article key={trip.slug} id={trip.slug} className="card trip-card">
               <Link href={tripHref(trip)} tabIndex={-1} aria-hidden="true">
                 <Image
@@ -115,7 +122,7 @@ export default function Page() {
         </div>
 
         <div className="gallery">
-          {GALLERY.map((g) => (
+          {gallery.map((g) => (
             <Image key={g.src} src={g.src} alt={g.alt} width={1400} height={933} sizes="(min-width: 720px) 25vw, 50vw" />
           ))}
         </div>

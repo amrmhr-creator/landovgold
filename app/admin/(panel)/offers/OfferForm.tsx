@@ -1,17 +1,24 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import AirportInput from "@/components/AirportInput";
 import { saveOfferAction, type OfferFormState } from "../../actions";
 
-/** Add or edit an offer. `initial` holds the field values (strings, as in the form). */
-export default function OfferForm({ initial }: { initial: Record<string, string> }) {
+type ImageChoice = { name: string; alt: string; small: string };
+
+/**
+ * Add or edit an offer. `initial` holds the field values (strings, as in the form);
+ * `images` are the photos uploaded in /admin/images, for the optional offer photo.
+ */
+export default function OfferForm({ initial, images }: { initial: Record<string, string>; images: ImageChoice[] }) {
   const [state, action, pending] = useActionState<OfferFormState, FormData>(saveOfferAction, {
     error: "",
     values: initial,
     attempt: 0,
   });
   const v = state.values;
+  const [image, setImage] = useState(v.image ?? "");
+  const chosen = images.find((i) => i.name === image);
 
   return (
     // Remounted after a failed save so the fields show what was typed, not the originals.
@@ -60,6 +67,22 @@ export default function OfferForm({ initial }: { initial: Record<string, string>
         تفاصيل زيادة (اختياري، كل سطر لوحده)
         <textarea name="extras" rows={3} maxLength={2000} defaultValue={v.extras} />
       </label>
+      <label>
+        صورة العرض (اختياري)
+        <select name="image" value={image} onChange={(e) => setImage(e.target.value)}>
+          <option value="">من غير صورة</option>
+          {images.map((i) => (
+            <option key={i.name} value={i.name}>
+              {i.alt || i.name.slice(0, 8)}
+            </option>
+          ))}
+        </select>
+      </label>
+      {chosen && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={chosen.small} alt="" width={240} height={160} className="admin-offer-preview" />
+      )}
+      {images.length === 0 && <p className="muted small">عشان تحط صورة، ارفعها الأول من صفحة &quot;الصور&quot;.</p>}
       <label className="check">
         <input type="checkbox" name="available" defaultChecked={v.available !== "off"} />
         العرض ظاهر على الموقع

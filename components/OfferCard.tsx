@@ -1,9 +1,16 @@
+import Image from "next/image";
 import Link from "next/link";
 import { formatDate, offerPrice, offerTitle, type Offer } from "@/lib/offers";
 
-export default function OfferCard({ offer }: { offer: Offer }) {
+/** An offer photo picked in the admin panel. */
+export type OfferPhoto = { src: string; alt: string; width: number; height: number };
+
+export default function OfferCard({ offer, photo }: { offer: Offer; photo?: OfferPhoto }) {
   return (
     <article className={`card offer-card ${offer.available ? "" : "is-expired"}`}>
+      {photo && (
+        <Image src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} sizes="(min-width: 900px) 360px, 100vw" className="offer-thumb" />
+      )}
       {!offer.available && <span className="badge badge-expired">انتهى</span>}
       <h3>{offerTitle(offer)}</h3>
       <dl>

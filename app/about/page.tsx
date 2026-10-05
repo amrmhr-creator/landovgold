@@ -1,7 +1,12 @@
+import Image from "next/image";
 import Link from "next/link";
 import PageHead from "@/components/PageHead";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { BUSINESS, whatsappLink } from "@/lib/site";
+import { sitePhotos } from "@/lib/uploads";
+
+// Photos are picked in the admin panel, so the page is rendered on each visit.
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "مين احنا",
@@ -16,7 +21,8 @@ const VALUES = [
   { title: "الأمانة", text: "لو فيه اختيار أرخص أو أنسب ليك، هنقولك عليه." },
 ];
 
-export default function Page() {
+export default async function Page() {
+  const photos = (await sitePhotos()).about;
   const official = [
     BUSINESS.legalName,
     BUSINESS.commercialRegister && `سجل تجاري رقم ${BUSINESS.commercialRegister}`,
@@ -42,6 +48,16 @@ export default function Page() {
           واحد بيرجعلنا تاني هو أحسن شهادة.
         </p>
       </section>
+
+      {photos.length > 0 && (
+        <section className="section container">
+          <div className="about-photos">
+            {photos.map((p) => (
+              <Image key={p.src} src={p.src} alt={p.alt} width={p.width} height={p.height} sizes="(min-width: 720px) 33vw, 100vw" />
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="section section-sand">
         <div className="container">

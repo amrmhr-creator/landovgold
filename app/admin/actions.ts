@@ -1,10 +1,12 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { logIn, logOut, requireAdmin } from "@/lib/admin-auth";
 import { AIRPORTS } from "@/lib/airports";
 import { describeError } from "@/lib/db";
 import { createOffer, setOfferAvailable, updateOffer, type OfferInput } from "@/lib/offers-data";
+import { isImageName, savePicks, updateAlt } from "@/lib/uploads";
 
 export async function loginAction(formData: FormData) {
   const error = await logIn(String(formData.get("password") ?? ""));
@@ -70,6 +72,7 @@ export async function saveOfferAction(prev: OfferFormState, formData: FormData):
       .map((s) => s.trim())
       .filter(Boolean),
     available: formData.get("available") === "on",
+    image: isImageName(text(formData, "image", 40)) ? text(formData, "image", 40) : undefined,
   };
   if (!offer.airline || !offer.transit || !offer.baggage) return fail("اكتب شركة الطيران والترانزيت والشنط.");
 
@@ -94,4 +97,28 @@ export async function toggleOfferAction(formData: FormData) {
   const id = Number(formData.get("id"));
   if (id) await setOfferAvailable(id, formData.get("available") === "1");
   redirect("/admin/offers");
+}
+
+/** Where uploaded photos are used: one per trip, the trips gallery, and "مين احنا". */
+export async function saveImagePicksAction(formData: FormData) {
+  await requireAdmin();
+  const trips: Record<string, string> = {};
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith("trip:") && value) trips[key.slice(5)] = String(value);
+  }
+  await savePicks({
+    trips,
+    gallery: formData.getAll("gallery").map(String),
+    about: formData.getAll("about").map(String),
+  });
+  revalidatePath("/", "layout");
+  redirect("/admin/images?saved=1");
+}
+
+export async function saveImageAltAction(formData: FormData) {
+  await requireAdmin();
+  const name = String(formData.get("name") ?? "");
+  if (isImageName(name)) await updateAlt(name, String(formData.get("alt") ?? ""));
+  revalidatePath("/", "layout");
+  redirect("/admin/images");
 }

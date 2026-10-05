@@ -15,6 +15,7 @@ export type Offer = {
   baggage: string; // e.g. "شنطة 23 كيلو"
   extras?: string[]; // anything else worth saying
   available: boolean;
+  image?: string; // optional photo uploaded in the admin panel (its file name)
 };
 
 /**

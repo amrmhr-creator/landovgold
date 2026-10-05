@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import JsonLd from "@/components/JsonLd";
@@ -9,6 +10,7 @@ import { ASK_PRICE, formatDate, formatPrice, isBookable, offerTitle } from "@/li
 import { getOffer } from "@/lib/offers-data";
 import { offerLd } from "@/lib/seo";
 import { whatsappLink } from "@/lib/site";
+import { sitePhotos } from "@/lib/uploads";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -21,13 +23,15 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const title =
     offer.price > 0 ? `عرض طيران ${offerTitle(offer)} يبدأ من ${formatPrice(offer.price)}` : `عرض طيران ${offerTitle(offer)}`;
   const description = `${offer.tripType} على ${offer.airline}، ${formatDate(offer.date)}. ${offer.transit}، ${offer.baggage}. احجز على واتساب أو سيب بياناتك.`;
-  return { title, description, openGraph: { title, description } };
+  const photo = (await sitePhotos()).byName(offer.image);
+  return { title, description, openGraph: { title, description, ...(photo && { images: [photo.src] }) } };
 }
 
 export default async function OfferPage({ params }: Params) {
   const offer = await getOffer(decodeURIComponent((await params).slug));
   if (!offer) notFound();
   const bookable = isBookable(offer);
+  const photo = (await sitePhotos()).byName(offer.image, offerTitle(offer));
 
   const title = offerTitle(offer);
   const label = `${offer.from} إلى ${offer.to} يوم ${formatDate(offer.date)}`;
@@ -49,6 +53,9 @@ export default async function OfferPage({ params }: Params) {
 
       <section className="section container offer-layout">
         <div className="offer-main">
+          {photo && (
+            <Image src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} sizes="(min-width: 900px) 700px, 100vw" className="offer-image" priority />
+          )}
           {!bookable && <p className="notice">العرض ده انتهى. كلّمنا ونجيبلك أقرب سعر ليه.</p>}
           <dl className="offer-facts">
             {offer.price > 0 ? (
