@@ -253,6 +253,8 @@ export async function saveTripAction(prev: TripFormState, formData: FormData): P
     price,
     summary,
     dates: text(formData, "dates", 150) || undefined,
+    seoTitle: text(formData, "seoTitle", 70) || undefined,
+    seoDescription: text(formData, "seoDescription", 200) || undefined,
     itinerary,
     hidden: values.visible !== "on",
     photo: isImageName(photo) ? photo : "",
@@ -307,7 +309,16 @@ export async function saveArticleAction(prev: ArticleFormState, formData: FormDa
   try {
     slug = await saveArticle(
       text(formData, "slug", 80) || null,
-      { title, description, summary, topic, body, hidden: values.visible !== "on" },
+      {
+        title,
+        description,
+        summary,
+        topic,
+        body,
+        hidden: values.visible !== "on",
+        seoTitle: text(formData, "seoTitle", 70) || undefined,
+        seoDescription: text(formData, "seoDescription", 200) || undefined,
+      },
       text(formData, "wantedSlug", 80),
     );
   } catch (err) {

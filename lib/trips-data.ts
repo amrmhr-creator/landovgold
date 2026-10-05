@@ -15,6 +15,9 @@ export type StoredTrip = Trip & {
   hidden?: boolean;
   /** Free text, e.g. "كل خميس من نوفمبر لفبراير". Empty = not shown. */
   dates?: string;
+  /** Optional title and description for Google and link previews; empty = made from the trip. */
+  seoTitle?: string;
+  seoDescription?: string;
 };
 
 const tripsFile = () => path.join(uploadDir(), "trips.json");

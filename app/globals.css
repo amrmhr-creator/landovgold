@@ -1298,6 +1298,19 @@ img {
   font-size: 20px;
 }
 
+.admin-seo {
+  display: grid;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px dashed var(--sand-deep);
+  border-radius: var(--radius);
+}
+
+.admin-seo summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* Admin: photos */
 .admin-images-top {
   display: grid;

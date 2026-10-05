@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import SeoFields from "@/components/SeoFields";
 import { saveArticleAction, type ArticleFormState } from "../../actions";
 import ArticleEditor from "./ArticleEditor";
 
@@ -51,6 +52,12 @@ export default function ArticleForm({ initial, images }: { initial: Record<strin
         <ArticleEditor initial={v.body ?? ""} images={images} />
       </div>
 
+      <SeoFields
+        title={v.seoTitle}
+        description={v.seoDescription}
+        autoTitle={v.title || "بيتعمل من عنوان المقال"}
+        autoDescription={v.summary || "بيتعمل من الإجابة باختصار"}
+      />
       <label className="check">
         <input type="checkbox" name="visible" defaultChecked={v.visible !== "off"} />
         المقال ظاهر على الموقع

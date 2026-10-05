@@ -12,7 +12,12 @@ import { uploadDir } from "./uploads";
 // app folder). Until the first save the site shows the articles written in lib/blog.ts. The body
 // stays Markdown either way: the admin editor turns what's typed into Markdown when saving.
 
-export type StoredArticle = Article & { hidden?: boolean };
+export type StoredArticle = Article & {
+  hidden?: boolean;
+  /** Optional title and description for Google and link previews; empty = the title and the short answer. */
+  seoTitle?: string;
+  seoDescription?: string;
+};
 
 const articlesFile = () => path.join(uploadDir(), "articles.json");
 
@@ -51,7 +56,7 @@ export function cleanSlug(input: string) {
     .slice(0, 80);
 }
 
-export type ArticleInput = Pick<StoredArticle, "title" | "description" | "summary" | "topic" | "body" | "hidden">;
+export type ArticleInput = Pick<StoredArticle, "title" | "description" | "summary" | "topic" | "body" | "hidden" | "seoTitle" | "seoDescription">;
 
 export class ArticleError extends Error {}
 

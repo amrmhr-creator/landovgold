@@ -40,6 +40,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           duration: trip.duration,
           price: trip.price > 0 ? String(trip.price) : "",
           dates: trip.dates ?? "",
+          seoTitle: trip.seoTitle ?? "",
+          seoDescription: trip.seoDescription ?? "",
           summary: trip.summary,
           photo: picks.trips[trip.slug] ?? "",
           visible: trip.hidden ? "off" : "on",

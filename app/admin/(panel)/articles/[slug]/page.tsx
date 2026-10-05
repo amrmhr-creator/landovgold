@@ -40,6 +40,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           description: article.description,
           summary: article.summary,
           body: article.body,
+          seoTitle: article.seoTitle ?? "",
+          seoDescription: article.seoDescription ?? "",
           visible: article.hidden ? "off" : "on",
         }}
         images={images.map((i) => ({ name: i.name, alt: i.alt, src: imageUrl(i.name), small: smallUrl(i.name) }))}

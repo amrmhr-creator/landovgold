@@ -1,6 +1,6 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { uploadDir } from "./data-dir";
 import { writeJsonFile } from "./json-file";
@@ -45,6 +45,31 @@ export function isImageName(name: string) {
 
 export const imageUrl = (name: string) => `/uploads/${name}`;
 export const smallUrl = (name: string) => `/uploads/${name.replace(/\.webp$/, "-sm.webp")}`;
+/** A 1200×630 JPG for link previews (WhatsApp, Facebook); made on first request. */
+export const shareUrl = (name: string) => `/uploads/${name.replace(/\.webp$/, "-og.jpg")}`;
+
+const SHARE_NAME = /^([a-f0-9]{24})-og\.jpg$/;
+
+/** The link-preview JPG for an uploaded photo, made from the large copy the first time it's asked for. */
+export async function shareImageFile(file: string) {
+  const m = SHARE_NAME.exec(file);
+  if (!m) return null;
+  const target = path.join(uploadDir(), file);
+  try {
+    return await readFile(target);
+  } catch {}
+  try {
+    const sharp = (await import("sharp")).default;
+    const body = await sharp(path.join(uploadDir(), `${m[1]}.webp`))
+      .resize(1200, 630, { fit: "cover" })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+    await writeFile(target, body).catch(() => {});
+    return body;
+  } catch {
+    return null;
+  }
+}
 
 async function readLibrary(): Promise<Library> {
   try {

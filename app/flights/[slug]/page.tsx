@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import OfferView from "@/components/views/OfferView";
 import { formatDate, formatPrice, isBookable, offerTitle } from "@/lib/offers";
 import { getOffer } from "@/lib/offers-data";
+import { shareImageFor } from "@/lib/share";
 import { sitePhotos } from "@/lib/uploads";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -17,7 +18,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     offer.price > 0 ? `عرض طيران ${offerTitle(offer)} يبدأ من ${formatPrice(offer.price)}` : `عرض طيران ${offerTitle(offer)}`;
   const description = `${offer.tripType} على ${offer.airline}، ${formatDate(offer.date)}. ${offer.transit}، ${offer.baggage}. احجز على واتساب أو سيب بياناتك.`;
   const photo = (await sitePhotos()).byName(offer.image);
-  return { title, description, openGraph: { title, description, ...(photo && { images: [photo.src] }) } };
+  const image = shareImageFor(photo?.src);
+  return { title, description, openGraph: { title, description, images: [{ url: image, width: 1200, height: 630 }] } };
 }
 
 export default async function OfferPage({ params }: Params) {

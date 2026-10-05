@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import SeoFields from "@/components/SeoFields";
 import { saveTripAction, type TripFormState } from "../../actions";
 
 type ImageChoice = { name: string; alt: string; small: string };
@@ -106,6 +107,12 @@ export default function TripForm({
       )}
       {images.length === 0 && <p className="muted small">عشان تختار صورة، ارفعها الأول من صفحة &quot;الصور&quot;.</p>}
 
+      <SeoFields
+        title={v.seoTitle}
+        description={v.seoDescription}
+        autoTitle={v.title ? `${v.title}: البرنامج يوم بيوم` : "بيتعمل من اسم الرحلة"}
+        autoDescription={v.summary ? `${v.duration ?? ""}. ${v.summary}` : "بيتعمل من المدة والملخص"}
+      />
       <label className="check">
         <input type="checkbox" name="visible" defaultChecked={v.visible !== "off"} />
         الرحلة ظاهرة على الموقع

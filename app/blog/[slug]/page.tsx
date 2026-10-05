@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ArticleView from "@/components/views/ArticleView";
 import { findArticle, visibleArticles } from "@/lib/blog-data";
+import { clip, firstPhotoIn, shareImageFor } from "@/lib/share";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -11,10 +12,13 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const a = await findArticle(decodeURIComponent((await params).slug));
   if (!a) return {};
+  const title = a.seoTitle || a.title;
+  const description = a.seoDescription || clip(a.summary);
+  const image = shareImageFor(firstPhotoIn(a.body));
   return {
-    title: a.title,
-    description: a.summary,
-    openGraph: { type: "article", title: a.title, description: a.summary, modifiedTime: a.updated },
+    title,
+    description,
+    openGraph: { type: "article", title, description, modifiedTime: a.updated, images: [{ url: image, width: 1200, height: 630 }] },
   };
 }
 
