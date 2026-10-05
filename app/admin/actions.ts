@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { RESET_LINK_MINUTES, createResetToken, passwordProblem, resetPassword, setOwnerPassword } from "@/lib/admin-accounts";
 import { checkPassword, logIn, logOut, requireAdmin, startSession } from "@/lib/admin-auth";
+import { runBackup } from "@/lib/backup";
 import { AIRPORTS } from "@/lib/airports";
 import { ArticleError, deleteArticle, restoreArticle, saveArticle, setArticleHidden } from "@/lib/blog-data";
 import { describeError } from "@/lib/db";
@@ -367,4 +368,11 @@ export async function purgeItemAction(formData: FormData) {
   await requireAdmin();
   await purgeFromTrash(text(formData, "id", 20));
   redirect("/admin/trash");
+}
+
+export async function backupNowAction(formData: FormData) {
+  await requireAdmin();
+  const result = await runBackup({ forceEmail: formData.get("email") === "1" });
+  const note = result.emailed ? "emailed" : result.emailError ? `email-error:${result.emailError}` : "done";
+  redirect(`/admin/backups?result=${encodeURIComponent(note)}`);
 }

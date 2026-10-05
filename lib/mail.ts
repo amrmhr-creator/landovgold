@@ -15,7 +15,13 @@ export function escapeHtml(s: string) {
 }
 
 /** Sends one email. Returns false (and logs why) when SMTP isn't configured; throws on send errors. */
-export async function sendMail(mail: { to: string; subject: string; text: string; html: string }) {
+export async function sendMail(mail: {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+  attachments?: { filename: string; content: Buffer }[];
+}) {
   const { SMTP_HOST, SMTP_USER, SMTP_PASSWORD } = process.env;
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASSWORD) {
     console.error(`[mail] pid ${process.pid}: email skipped: SMTP_HOST, SMTP_USER or SMTP_PASSWORD is not set`);

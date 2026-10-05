@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
+import { backupIfDue } from "@/lib/backup";
 import { dbConfigured } from "@/lib/db";
 import { logoutAction } from "../actions";
 
@@ -15,11 +16,13 @@ const NAV = [
   { href: "/admin/images", label: "الصور" },
   { href: "/admin/settings", label: "الإعدادات" },
   { href: "/admin/trash", label: "السلة" },
+  { href: "/admin/backups", label: "النسخ الاحتياطية" },
   { href: "/admin/account", label: "حسابي" },
 ];
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin();
+  backupIfDue();
   return (
     <>
       <header className="admin-bar">

@@ -1294,6 +1294,10 @@ img {
   font-weight: 700;
 }
 
+.admin-stats-small b {
+  font-size: 20px;
+}
+
 /* Admin: photos */
 .admin-images-top {
   display: grid;

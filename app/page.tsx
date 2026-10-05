@@ -10,6 +10,7 @@ import { SECTIONS } from "@/lib/sections";
 import { SITE, whatsappLink } from "@/lib/site";
 import { ASK_TRIP_PRICE, tripHref } from "@/lib/trips";
 import { visibleTrips } from "@/lib/trips-data";
+import { backupIfDue } from "@/lib/backup";
 import { getSettings } from "@/lib/settings";
 import { sitePhotos } from "@/lib/uploads";
 
@@ -17,6 +18,8 @@ import { sitePhotos } from "@/lib/uploads";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  // The first visit of the day starts the daily backup (it runs in the background).
+  backupIfDue();
   const latestOffers = (await bookableOffers()).slice(0, 3);
   const { flights, aswan } = SECTIONS;
   const [photos, s] = await Promise.all([sitePhotos(), getSettings()]);
